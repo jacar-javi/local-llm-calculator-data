@@ -1,0 +1,23 @@
+The data in the data/ directory of this repository (all *.json and *-notes.md
+files) is licensed under the Creative Commons Attribution 4.0 International
+License (CC BY 4.0).
+
+Copyright (c) 2026 Javier Cañete (jacar.es)
+
+You are free to share and adapt the data for any purpose, including
+commercially, as long as you give appropriate credit, provide a link to the
+license, and indicate if changes were made.
+
+Suggested attribution:
+  "Local LLM calculator data by Javier Cañete (jacar.es), CC BY 4.0,
+   https://jacar.es/en/local-llm-calculator/"
+
+Full license text: https://creativecommons.org/licenses/by/4.0/legalcode
+Summary:           https://creativecommons.org/licenses/by/4.0/
+
+Quoted excerpts from third-party sources (vendor spec pages, project READMEs,
+source code, GitHub issues) remain the property of their authors and are
+included only as short citations next to the URL they come from.
+
+The code (scripts/, calculator/, tests/) is licensed separately under the MIT
+License: see LICENSE.

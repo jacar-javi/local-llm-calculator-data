@@ -1,0 +1,1582 @@
+{
+  "generated": "2026-09-15",
+  "engines": [
+    {
+      "id": "llamacpp",
+      "name": "llama.cpp (llama-server / llama-cli)",
+      "version": "v0.4.1",
+      "commit": "b29c606e28a01b1bc8c1351026a0fa6e616bf6c4",
+      "released": "2026-09-14",
+      "license": "MIT",
+      "backends": {
+        "CUDA": "yes",
+        "ROCm": "yes (backend is named HIP: -DGGML_HIP=ON, needs ROCm)",
+        "Vulkan": "yes",
+        "Metal": "yes",
+        "SYCL": "yes (Intel GPU)",
+        "CPU-x86": "yes (AVX/AVX2/AVX512/AMX)",
+        "CPU-ARM": "yes (NEON; KleidiAI optional)",
+        "other": "CANN, MUSA, OpenCL (Adreno), WebGPU, zDNN, Hexagon, ZenDNN, RPC; OpenVINO marked [In Progress]"
+      },
+      "weight_formats": [
+        {
+          "id": "gguf-bf16",
+          "label": "GGUF BF16",
+          "bpw": 16.0,
+          "bpw_nominal": 16.0,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "BF16 not in README table; block = 2 bytes/weight. quantize.cpp: '14.00G, -0.0050 ppl @ Mistral-7B'. README F16 row (same 2-byte size) measured 16.0005 bpw on Llama-3.1-8B."
+        },
+        {
+          "id": "gguf-f16",
+          "label": "GGUF F16",
+          "bpw": 16.0005,
+          "bpw_nominal": 16.0,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q8_0",
+          "label": "GGUF Q8_0",
+          "bpw": 8.5008,
+          "bpw_nominal": 8.5,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q6_k",
+          "label": "GGUF Q6_K",
+          "bpw": 6.5633,
+          "bpw_nominal": 6.5625,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q5_k_m",
+          "label": "GGUF Q5_K_M",
+          "bpw": 5.7036,
+          "bpw_nominal": 5.5,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q5_K block, mix uses Q6_K for some tensors"
+        },
+        {
+          "id": "gguf-q4_k_m",
+          "label": "GGUF Q4_K_M",
+          "bpw": 4.8944,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q4_K block, mix uses Q6_K for output/some attn_v/ffn_down"
+        },
+        {
+          "id": "gguf-q4_0",
+          "label": "GGUF Q4_0",
+          "bpw": 4.64,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Not in README table. Derived from quantize.cpp '4.34G @ Llama-3-8B' with params back-solved from README F16 row (14.96 GiB @ 16.0005 bpw => 8.0313e9 params): 4.34*2^30*8/8.0313e9 = 4.642. Cross-check: same method gives Q8_0 8.514 (table 8.5008), Q4_K_M 4.899 (table 4.8944)."
+        },
+        {
+          "id": "gguf-iq4_xs",
+          "label": "GGUF IQ4_XS",
+          "bpw": 4.4597,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q3_k_m",
+          "label": "GGUF Q3_K_M",
+          "bpw": 3.996,
+          "bpw_nominal": 3.4375,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q3_K block"
+        },
+        {
+          "id": "gguf-iq3_xxs",
+          "label": "GGUF IQ3_XXS",
+          "bpw": 3.2548,
+          "bpw_nominal": 3.0625,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q2_k",
+          "label": "GGUF Q2_K",
+          "bpw": 3.1593,
+          "bpw_nominal": 2.625,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q2_K block (mix keeps other tensors higher)"
+        },
+        {
+          "id": "gguf-tq2_0",
+          "label": "GGUF TQ2_0 (ternary)",
+          "bpw": 2.0625,
+          "bpw_nominal": 2.0625,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Not in README table; quantize.cpp: '2.06 bpw ternarization' (no model named). Block (256, 66 bytes). Only valid for ternary-trained models; effective file bpw for a real model not published."
+        },
+        {
+          "id": "gguf-tq1_0",
+          "label": "GGUF TQ1_0 (ternary)",
+          "bpw": 1.6875,
+          "bpw_nominal": 1.6875,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Not in README table; quantize.cpp: '1.69 bpw ternarization'. Block (256, 54 bytes). Same caveat as TQ2_0."
+        },
+        {
+          "id": "gguf-mxfp4_moe",
+          "label": "GGUF MXFP4_MOE",
+          "bpw": null,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "llama-quant.cpp: 3D expert tensors -> MXFP4 (block 32, 17 bytes = 4.25 bpw), all other quantizable tensors -> Q8_0 (8.5 bpw). Effective bpw depends on expert share; no published measurement."
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "f32",
+          "bytes": 4.0,
+          "flag": "-ctk f32 -ctv f32",
+          "requires": null
+        },
+        {
+          "id": "f16",
+          "bytes": 2.0,
+          "flag": "-ctk f16 -ctv f16",
+          "requires": null
+        },
+        {
+          "id": "bf16",
+          "bytes": 2.0,
+          "flag": "-ctk bf16 -ctv bf16",
+          "requires": null
+        },
+        {
+          "id": "q8_0",
+          "bytes": 1.0625,
+          "flag": "-ctk q8_0 -ctv q8_0",
+          "requires": "Quantized V needs Flash Attention: -fa auto (default) switches it on, -fa off aborts. With FA on/auto, head_dim must be divisible by the block size (32). MLA models need identical K and V types."
+        },
+        {
+          "id": "q5_1",
+          "bytes": 0.75,
+          "flag": "-ctk q5_1 -ctv q5_1",
+          "requires": "Quantized V needs Flash Attention: -fa auto (default) switches it on, -fa off aborts. With FA on/auto, head_dim must be divisible by the block size (32). MLA models need identical K and V types."
+        },
+        {
+          "id": "q5_0",
+          "bytes": 0.6875,
+          "flag": "-ctk q5_0 -ctv q5_0",
+          "requires": "Quantized V needs Flash Attention: -fa auto (default) switches it on, -fa off aborts. With FA on/auto, head_dim must be divisible by the block size (32). MLA models need identical K and V types."
+        },
+        {
+          "id": "q4_1",
+          "bytes": 0.625,
+          "flag": "-ctk q4_1 -ctv q4_1",
+          "requires": "Quantized V needs Flash Attention: -fa auto (default) switches it on, -fa off aborts. With FA on/auto, head_dim must be divisible by the block size (32). MLA models need identical K and V types."
+        },
+        {
+          "id": "iq4_nl",
+          "bytes": 0.5625,
+          "flag": "-ctk iq4_nl -ctv iq4_nl",
+          "requires": "Quantized V needs Flash Attention: -fa auto (default) switches it on, -fa off aborts. With FA on/auto, head_dim must be divisible by the block size (32). MLA models need identical K and V types."
+        },
+        {
+          "id": "q4_0",
+          "bytes": 0.5625,
+          "flag": "-ctk q4_0 -ctv q4_0",
+          "requires": "Quantized V needs Flash Attention: -fa auto (default) switches it on, -fa off aborts. With FA on/auto, head_dim must be divisible by the block size (32). MLA models need identical K and V types."
+        }
+      ],
+      "memory_policy": {
+        "type": "ctx-prealloc",
+        "fraction": null,
+        "default_context": "-c 0 (default) = model n_ctx_train. --fit is on by default: if the projected use exceeds free device memory minus --fit-target (1024 MiB/device), an UNSET context is lowered (floor --fit-ctx 4096) and layers/experts are moved to CPU. A context set with -c is never changed.",
+        "parallel_multiplies_kv": false,
+        "default_parallel": "llama-server: -np -1 (auto) => 4 slots + unified KV; llama-cli/common: 1",
+        "details": "n_ctx is the TOTAL KV cell count, padded to 256. Unified KV (default when -np is auto): one pool of n_ctx cells shared by every slot, and each slot may use up to n_ctx. With an explicit -np N and no -kvu, n_ctx is split into N streams of n_ctx/N. What scales with the slot count (n_seq_max): the recurrent/SSM state (F32, one per sequence) and, with unified KV, the SWA window (n_swa*n_seq_max + n_ubatch). The whole KV is allocated at context creation. --cache-ram (default 8192 MiB) caps a separate host-RAM prompt cache."
+      },
+      "attention_support": {
+        "swa_window_only": true,
+        "mla": true,
+        "linear_hybrid": true,
+        "ssm_hybrid": true,
+        "details": "The SWA cache is sized min(n_ctx_seq, n_swa*(unified ? n_seq_max : 1) + n_ubatch), padded to 256. --swa-full makes it full size. MLA stores only K = kv_lora_rank + qk_rope_head_dim per layer (has_v = !is_mla). Hybrid architectures include qwen3next, qwen35, qwen35moe, kimi-linear, minimax-01 (linear), plus jamba, falcon-h1, granitehybrid, nemotron_h, lfm2, plamo2 (SSM). mamba, mamba2 and rwkv6/7 are pure recurrent. The recurrent state is F32 regardless of -ctk."
+      },
+      "offload": "-ngl N|auto|all (default auto, resolved by --fit); -ot '<regex>=<buffer>' tensor overrides; --cpu-moe (all experts on CPU) and --n-cpu-moe N (experts of the first N layers on CPU); --n-cpu-ffn N (dense FFN); -nkvo keeps the KV cache in host RAM.",
+      "overhead_notes": "Printed by llama_memory_breakdown_print as model + context + compute per device. Documented example (tools/fit-params/README.md): Qwen3-30B-A3B f16, -c 4096, RTX 4090 shows 17904 MiB model + 384 MiB context + 898 MiB compute. The compute buffer grows with n_ubatch (default 512). --fit keeps a 1024 MiB free margin per device by default.",
+      "sources": [
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/common/arg.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/common/common.h",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/common/fit.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/server/server.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/server/README.md",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/src/llama-context.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/src/llama-kv-cache.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/src/llama-kv-cache-iswa.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/src/llama-model.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/src/llama-arch.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/src/llama-quant.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/src/models/deepseek2.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/README.md",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/docs/build.md",
+        "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/fit-params/README.md",
+        "https://github.com/ggml-org/llama.cpp/releases/tag/v0.4.1",
+        "https://github.com/ggml-org/llama.cpp/releases/tag/b10976 (prebuilt binary matrix)"
+      ],
+      "notes": "llama.cpp now ships semver releases (v0.4.1, 2026-09-14) next to its nightly bNNNNN builds; the pin above is the semver tag. The README bpw table was measured on Llama-3.1-8B, while quantize.cpp's option strings cite Llama-3-8B and Mistral-7B. Mixes keep 1D tensors (norms) unquantized and put output.weight (or tied token_embd) at Q6_K for most k-quants."
+    },
+    {
+      "id": "ollama",
+      "name": "Ollama",
+      "version": "v0.34.0",
+      "commit": "d8ab4b4f0ca24b51d3a46b3bf4f462e58ce66b1f",
+      "released": "2026-09-09",
+      "license": "MIT",
+      "backends": {
+        "CUDA": "yes (compute capability 5.0+, driver 550+; CUDA 12 and 13 runner builds)",
+        "ROCm": "yes (ROCm v7, Linux and Windows; built via GGML_HIP)",
+        "Vulkan": "yes (enabled by default when the backend is installed; OLLAMA_VULKAN=0 disables)",
+        "Metal": "yes (Apple Silicon)",
+        "SYCL": "no (not in docs or build presets; Intel GPUs only via Vulkan)",
+        "CPU-x86": "yes (x86 Macs are CPU-only)",
+        "CPU-ARM": "yes (linux-arm64 package, Windows arm64 CPU preset)",
+        "other": "Separate MLX engine for safetensors models: on by default on macOS arm64 (Metal); MLX CUDA backend via OLLAMA_MLX_BACKENDS / ollama-windows-amd64-mlx.zip"
+      },
+      "weight_formats": [
+        {
+          "id": "gguf-bf16",
+          "label": "GGUF BF16",
+          "bpw": 16.0,
+          "bpw_nominal": 16.0,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "BF16 not in README table; block = 2 bytes/weight. quantize.cpp: '14.00G, -0.0050 ppl @ Mistral-7B'. README F16 row (same 2-byte size) measured 16.0005 bpw on Llama-3.1-8B."
+        },
+        {
+          "id": "gguf-f16",
+          "label": "GGUF F16",
+          "bpw": 16.0005,
+          "bpw_nominal": 16.0,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q8_0",
+          "label": "GGUF Q8_0",
+          "bpw": 8.5008,
+          "bpw_nominal": 8.5,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q6_k",
+          "label": "GGUF Q6_K",
+          "bpw": 6.5633,
+          "bpw_nominal": 6.5625,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q5_k_m",
+          "label": "GGUF Q5_K_M",
+          "bpw": 5.7036,
+          "bpw_nominal": 5.5,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q5_K block, mix uses Q6_K for some tensors"
+        },
+        {
+          "id": "gguf-q4_k_m",
+          "label": "GGUF Q4_K_M",
+          "bpw": 4.8944,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q4_K block, mix uses Q6_K for output/some attn_v/ffn_down"
+        },
+        {
+          "id": "gguf-q4_0",
+          "label": "GGUF Q4_0",
+          "bpw": 4.64,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Not in README table. Derived from quantize.cpp '4.34G @ Llama-3-8B' with params back-solved from README F16 row (14.96 GiB @ 16.0005 bpw => 8.0313e9 params): 4.34*2^30*8/8.0313e9 = 4.642. Cross-check: same method gives Q8_0 8.514 (table 8.5008), Q4_K_M 4.899 (table 4.8944)."
+        },
+        {
+          "id": "gguf-iq4_xs",
+          "label": "GGUF IQ4_XS",
+          "bpw": 4.4597,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q3_k_m",
+          "label": "GGUF Q3_K_M",
+          "bpw": 3.996,
+          "bpw_nominal": 3.4375,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q3_K block"
+        },
+        {
+          "id": "gguf-iq3_xxs",
+          "label": "GGUF IQ3_XXS",
+          "bpw": 3.2548,
+          "bpw_nominal": 3.0625,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table"
+        },
+        {
+          "id": "gguf-q2_k",
+          "label": "GGUF Q2_K",
+          "bpw": 3.1593,
+          "bpw_nominal": 2.625,
+          "bpw_kind": "measured-mix",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Llama-3.1-8B (meta-llama/Llama-3.1-8B), tools/quantize/README.md table; nominal = Q2_K block (mix keeps other tensors higher)"
+        },
+        {
+          "id": "gguf-tq2_0",
+          "label": "GGUF TQ2_0 (ternary)",
+          "bpw": 2.0625,
+          "bpw_nominal": 2.0625,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Not in README table; quantize.cpp: '2.06 bpw ternarization' (no model named). Block (256, 66 bytes). Only valid for ternary-trained models; effective file bpw for a real model not published."
+        },
+        {
+          "id": "gguf-tq1_0",
+          "label": "GGUF TQ1_0 (ternary)",
+          "bpw": 1.6875,
+          "bpw_nominal": 1.6875,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "Not in README table; quantize.cpp: '1.69 bpw ternarization'. Block (256, 54 bytes). Same caveat as TQ2_0."
+        },
+        {
+          "id": "gguf-mxfp4_moe",
+          "label": "GGUF MXFP4_MOE",
+          "bpw": null,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "nominal-block",
+          "source": "https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/README.md; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/tools/quantize/quantize.cpp; https://github.com/ggml-org/llama.cpp/blob/v0.4.1/gguf-py/gguf/constants.py (GGML_QUANT_SIZES)",
+          "notes": "llama-quant.cpp: 3D expert tensors -> MXFP4 (block 32, 17 bytes = 4.25 bpw), all other quantizable tensors -> Q8_0 (8.5 bpw). Effective bpw depends on expert share; no published measurement."
+        },
+        {
+          "id": "ollama-mlx-int4-4bit-g64",
+          "label": "MLX 4-bit affine (group 64)",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 4 + 32/64",
+          "source": "https://github.com/ollama/ollama/blob/v0.34.0/x/quant/quant.go",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them. Ollama aliases INT4/FP4/Q4 to this."
+        },
+        {
+          "id": "ollama-mlx-int8-8bit-g64",
+          "label": "MLX 8-bit affine (group 64)",
+          "bpw": 8.5,
+          "bpw_nominal": 8.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 8 + 32/64",
+          "source": "https://github.com/ollama/ollama/blob/v0.34.0/x/quant/quant.go",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them. Ollama aliases INT8/FP8/Q8 to this, so 'FP8' here is 8-bit affine integer, not float8."
+        },
+        {
+          "id": "ollama-mlx-nvfp4",
+          "label": "MLX nvfp4",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/16",
+          "source": "https://github.com/ollama/ollama/blob/v0.34.0/x/quant/quant.go",
+          "notes": "shared 8-bit scale per group (e8m0 for mx*, e4m3 for nvfp4); nvfp4 may add one fp32 global scale per tensor (negligible)"
+        },
+        {
+          "id": "ollama-mlx-mxfp4",
+          "label": "MLX mxfp4",
+          "bpw": 4.25,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/32",
+          "source": "https://github.com/ollama/ollama/blob/v0.34.0/x/quant/quant.go",
+          "notes": "shared 8-bit scale per group (e8m0 for mx*, e4m3 for nvfp4); nvfp4 may add one fp32 global scale per tensor (negligible)"
+        },
+        {
+          "id": "ollama-mlx-mxfp8",
+          "label": "MLX mxfp8",
+          "bpw": 8.25,
+          "bpw_nominal": 8.25,
+          "bpw_kind": "derived",
+          "formula": "8 + 8/32",
+          "source": "https://github.com/ollama/ollama/blob/v0.34.0/x/quant/quant.go",
+          "notes": "shared 8-bit scale per group (e8m0 for mx*, e4m3 for nvfp4); nvfp4 may add one fp32 global scale per tensor (negligible)"
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "f16",
+          "bytes": 2.0,
+          "flag": "OLLAMA_KV_CACHE_TYPE=f16",
+          "requires": null
+        },
+        {
+          "id": "q8_0",
+          "bytes": 1.0625,
+          "flag": "OLLAMA_KV_CACHE_TYPE=q8_0",
+          "requires": "Documented: 'quantized when Flash Attention is enabled'. Ollama passes the value to both --cache-type-k and --cache-type-v. If OLLAMA_FLASH_ATTENTION=0 or the device lacks FA support (it then passes --flash-attn off), llama-server rejects a quantized V cache."
+        },
+        {
+          "id": "q4_0",
+          "bytes": 0.5625,
+          "flag": "OLLAMA_KV_CACHE_TYPE=q4_0",
+          "requires": "Documented: 'quantized when Flash Attention is enabled'. Ollama passes the value to both --cache-type-k and --cache-type-v. If OLLAMA_FLASH_ATTENTION=0 or the device lacks FA support (it then passes --flash-attn off), llama-server rejects a quantized V cache."
+        }
+      ],
+      "memory_policy": {
+        "type": "ctx-prealloc",
+        "fraction": null,
+        "default_context": "num_ctx comes from the request, then the Modelfile, then OLLAMA_CONTEXT_LENGTH. Without any of those it is VRAM-tiered on total VRAM across GPUs (minus OLLAMA_GPU_OVERHEAD): >=47 GiB => 262144, >=23 GiB => 32768, otherwise 4096. It is capped at the model's training context. On a load OOM, an automatic context is retried once at the next lower tier (32768, then 4096).",
+        "parallel_multiplies_kv": true,
+        "default_parallel": "OLLAMA_NUM_PARALLEL default 1. Forced to 1 for embeddings and for model families mllama, qwen3vl, qwen3vlmoe, qwen35, qwen35moe, qwen3next, lfm2, lfm2moe, nemotron_h, nemotron_h_moe, nemotron_h_omni.",
+        "details": "llama-server is launched with -c num_ctx*num_parallel and -np num_parallel, without -kvu, so KV = num_ctx x parallel (FAQ: 'Required RAM will scale by OLLAMA_NUM_PARALLEL * OLLAMA_CONTEXT_LENGTH'). Automatic num_batch (passed as -b and -ub): 2048 when effective ctx > 32768, 1024 when > 4096, else 512 (512/256 on CUDA without FA). It steps down when predicted VRAM is too close to free memory. OLLAMA_MAX_LOADED_MODELS default 3 x GPUs (3 on CPU)."
+      },
+      "attention_support": {
+        "swa_window_only": true,
+        "mla": true,
+        "linear_hybrid": true,
+        "ssm_hybrid": true,
+        "details": "All GGUF models run in the upstream llama-server subprocess (LLAMA_CPP_VERSION = b10760), so KV behaviour follows llama.cpp (SWA window cache, MLA K-only, hybrid recurrent state). These flags were verified against llama.cpp v0.4.1 source, not re-read at b10760. Ollama passes no --swa-full. Hybrid families run with num_parallel forced to 1."
+      },
+      "offload": "Automatic: Ollama omits -ngl by default and llama-server's --fit picks the GPU layer split. The num_gpu option maps to -ngl N (0 = CPU only). `ollama ps` PROCESSOR shows the CPU/GPU split.",
+      "overhead_notes": "The scheduler reserves MinimumMemory per GPU (457 MiB non-Metal, 512 MiB Metal) plus OLLAMA_GPU_OVERHEAD (user bytes, default 0). Its memory prediction adds a batch surcharge (768 MiB at num_batch 1024, 2 GiB at 2048) and evicts other models when the prediction exceeds 80% of free memory. PredictServerVRAM is only a planning estimate: GGUF file size + 2*layers*kv_heads*head_dim*ctx*2 bytes (f16, no SWA/MLA awareness).",
+      "sources": [
+        "https://github.com/ollama/ollama/blob/v0.34.0/docs/context-length.mdx",
+        "https://github.com/ollama/ollama/blob/v0.34.0/docs/faq.mdx",
+        "https://github.com/ollama/ollama/blob/v0.34.0/docs/gpu.mdx",
+        "https://github.com/ollama/ollama/blob/v0.34.0/docs/development.md",
+        "https://github.com/ollama/ollama/blob/v0.34.0/docs/windows.mdx",
+        "https://github.com/ollama/ollama/blob/v0.34.0/docs/linux.mdx",
+        "https://github.com/ollama/ollama/blob/v0.34.0/docs/macos.mdx",
+        "https://github.com/ollama/ollama/blob/v0.34.0/envconfig/config.go",
+        "https://github.com/ollama/ollama/blob/v0.34.0/server/routes.go",
+        "https://github.com/ollama/ollama/blob/v0.34.0/server/sched.go",
+        "https://github.com/ollama/ollama/blob/v0.34.0/llm/server.go",
+        "https://github.com/ollama/ollama/blob/v0.34.0/llm/llama_server.go",
+        "https://github.com/ollama/ollama/blob/v0.34.0/ml/device.go",
+        "https://github.com/ollama/ollama/blob/v0.34.0/x/quant/quant.go",
+        "https://github.com/ollama/ollama/blob/v0.34.0/LLAMA_CPP_VERSION",
+        "https://github.com/ollama/ollama/blob/v0.34.0/llama/server/CMakePresets.json",
+        "https://github.com/ollama/ollama/blob/v0.34.0/CMakePresets.json"
+      ],
+      "notes": "v0.34.1 is still at rc2, so v0.34.0 is the latest stable. Ollama's in-house GGML runner is gone: 'All GGML models are served via the upstream llama-server subprocess.' docs/faq.mdx still says the default context is 4096, which contradicts context-length.mdx and routes.go (VRAM-tiered)."
+    },
+    {
+      "id": "lmstudio",
+      "name": "LM Studio (app / llmster / lms)",
+      "version": "0.4.24 (build 1)",
+      "commit": null,
+      "released": null,
+      "license": null,
+      "backends": {
+        "CUDA": "yes (llama.cpp CUDA runtime)",
+        "ROCm": "yes (llama.cpp ROCm runtime)",
+        "Vulkan": "yes (llama.cpp Vulkan runtime)",
+        "Metal": "yes (llama.cpp Metal + Apple MLX engine)",
+        "SYCL": null,
+        "CPU-x86": "yes (AVX2 required)",
+        "CPU-ARM": "yes (Apple Silicon, Windows on Snapdragon, Linux ARM64)",
+        "other": "Intel Macs are not supported"
+      },
+      "weight_formats": [
+        {
+          "id": "gguf",
+          "label": "GGUF (llama.cpp engine)",
+          "bpw": null,
+          "bpw_kind": "inherits",
+          "source": "see engine 'llamacpp' weight_formats",
+          "notes": "Same GGUF types and bpw as llama.cpp. LM Studio's llama.cpp runtime pack ('llama.cpp 2.33.0') uses LM Studio's own numbering, and the upstream commit is not published in the fetched sources."
+        },
+        {
+          "id": "lmstudio-mlx-4bit-g64",
+          "label": "MLX 4-bit affine (group 64)",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 4 + 32/64",
+          "source": "see engine 'mlx-lm' (mlx-community checkpoints)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them. The MLX engine is closed. The bpw assumes stock MLX affine checkpoints and was not verified in mlx-engine source."
+        },
+        {
+          "id": "lmstudio-mlx-8bit-g64",
+          "label": "MLX 8-bit affine (group 64)",
+          "bpw": 8.5,
+          "bpw_nominal": 8.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 8 + 32/64",
+          "source": "see engine 'mlx-lm'",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them. Same assumption as the 4-bit entry."
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "f32",
+          "bytes": 4.0,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=f32 (SDK); model loader UI",
+          "requires": null
+        },
+        {
+          "id": "f16",
+          "bytes": 2.0,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=f16 (SDK); model loader UI",
+          "requires": null
+        },
+        {
+          "id": "bf16",
+          "bytes": 2.0,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=bf16 (SDK); model loader UI",
+          "requires": null
+        },
+        {
+          "id": "q8_0",
+          "bytes": 1.0625,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=q8_0 (SDK); model loader UI",
+          "requires": "The V cache 'requires Flash Attention to be enabled'. Only the llama.cpp engine uses these."
+        },
+        {
+          "id": "q5_1",
+          "bytes": 0.75,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=q5_1 (SDK); model loader UI",
+          "requires": "The V cache 'requires Flash Attention to be enabled'. Only the llama.cpp engine uses these."
+        },
+        {
+          "id": "q5_0",
+          "bytes": 0.6875,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=q5_0 (SDK); model loader UI",
+          "requires": "The V cache 'requires Flash Attention to be enabled'. Only the llama.cpp engine uses these."
+        },
+        {
+          "id": "q4_1",
+          "bytes": 0.625,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=q4_1 (SDK); model loader UI",
+          "requires": "The V cache 'requires Flash Attention to be enabled'. Only the llama.cpp engine uses these."
+        },
+        {
+          "id": "iq4_nl",
+          "bytes": 0.5625,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=iq4_nl (SDK); model loader UI",
+          "requires": "The V cache 'requires Flash Attention to be enabled'. Only the llama.cpp engine uses these."
+        },
+        {
+          "id": "q4_0",
+          "bytes": 0.5625,
+          "flag": "llamaKCacheQuantizationType/llamaVCacheQuantizationType=q4_0 (SDK); model loader UI",
+          "requires": "The V cache 'requires Flash Attention to be enabled'. Only the llama.cpp engine uses these."
+        },
+        {
+          "id": "mlx-kv-8bit-g64",
+          "bytes": 1.0625,
+          "flag": "mlxKvCacheQuantization={enabled:true,bits:8,groupSize:64,quantizedStart:N} (SDK)",
+          "requires": "MLX engine only. Bytes assume MLX affine packing (fp16 scale+bias per group), as in mlx-lm QuantizedKVCache; mlx-engine source not read."
+        },
+        {
+          "id": "mlx-kv-6bit-g64",
+          "bytes": 0.8125,
+          "flag": "mlxKvCacheQuantization={enabled:true,bits:6,groupSize:64,quantizedStart:N} (SDK)",
+          "requires": "MLX engine only. Bytes assume MLX affine packing (fp16 scale+bias per group), as in mlx-lm QuantizedKVCache; mlx-engine source not read."
+        },
+        {
+          "id": "mlx-kv-4bit-g64",
+          "bytes": 0.5625,
+          "flag": "mlxKvCacheQuantization={enabled:true,bits:4,groupSize:64,quantizedStart:N} (SDK)",
+          "requires": "MLX engine only. Bytes assume MLX affine packing (fp16 scale+bias per group), as in mlx-lm QuantizedKVCache; mlx-engine source not read."
+        },
+        {
+          "id": "mlx-kv-3bit-g64",
+          "bytes": 0.4375,
+          "flag": "mlxKvCacheQuantization={enabled:true,bits:3,groupSize:64,quantizedStart:N} (SDK)",
+          "requires": "MLX engine only. Bytes assume MLX affine packing (fp16 scale+bias per group), as in mlx-lm QuantizedKVCache; mlx-engine source not read."
+        },
+        {
+          "id": "mlx-kv-2bit-g64",
+          "bytes": 0.3125,
+          "flag": "mlxKvCacheQuantization={enabled:true,bits:2,groupSize:64,quantizedStart:N} (SDK)",
+          "requires": "MLX engine only. Bytes assume MLX affine packing (fp16 scale+bias per group), as in mlx-lm QuantizedKVCache; mlx-engine source not read."
+        }
+      ],
+      "memory_policy": {
+        "type": "ctx-prealloc",
+        "fraction": null,
+        "default_context": null,
+        "parallel_multiplies_kv": false,
+        "default_parallel": "Max Concurrent Predictions default 4 (llama.cpp engine), Unified KV Cache on by default",
+        "details": "0.4.0 notes say 4 parallel slots with unified KV 'should result in no additional memory overhead'. With useUnifiedKvCache=false each prediction gets the full context 'at the cost of using more memory'. Guardrails: the loader estimates memory from context length, GPU offload, flash attention and vision; it warns or blocks loads that would exceed resources and can be overridden. `lms load --estimate-only` prints 'Estimated GPU Memory / Total Memory' and whether it 'passes guardrails'. The guardrail levels and thresholds are not documented in the fetched sources. gpuStrictVramCap caps offload at detected VRAM. autoFit picks context and placement (SDK doc: 'only available when using Bionic'); the Bionic 1.1.2 changelog adds `lms load --auto`, and the link between the two is inferred."
+      },
+      "attention_support": {
+        "swa_window_only": null,
+        "mla": null,
+        "linear_hybrid": null,
+        "ssm_hybrid": null,
+        "details": "Closed-source runtimes. The llama.cpp engine presumably inherits upstream behaviour, but the upstream commit and flags such as --swa-full are not documented, so these are null."
+      },
+      "offload": "lms load --gpu 0-1|off|max (fraction of layers on GPU; default automatic); offloadKVCacheToGpu (false = KV in RAM, llama.cpp engine only); gpuStrictVramCap; numCpuExpertLayersRatio in the SDK (0.3.24 notes).",
+      "overhead_notes": null,
+      "sources": [
+        "https://github.com/lmstudio-ai/docs/blob/9b8bc2004f04880a0ca7cbb19932ea8eb390c2d5/0_app/0_root/system-requirements.md",
+        "https://github.com/lmstudio-ai/docs/blob/9b8bc2004f04880a0ca7cbb19932ea8eb390c2d5/3_cli/0_local-models/load.md",
+        "https://github.com/lmstudio-ai/docs/blob/9b8bc2004f04880a0ca7cbb19932ea8eb390c2d5/0_app/5_advanced/parallel-requests.md",
+        "https://github.com/lmstudio-ai/docs/blob/9b8bc2004f04880a0ca7cbb19932ea8eb390c2d5/1_developer/2_rest/load.md",
+        "https://github.com/lmstudio-ai/docs/blob/9b8bc2004f04880a0ca7cbb19932ea8eb390c2d5/2_typescript/7_api-reference/llm-load-model-config.md",
+        "https://github.com/lmstudio-ai/lmstudio-js/blob/c47dce0d37a3008d3e4c393e40452825a2a9790b/packages/lms-shared-types/src/llm/LLMLoadModelConfig.ts",
+        "https://github.com/lmstudio-ai/lmstudio-js/blob/c47dce0d37a3008d3e4c393e40452825a2a9790b/packages/lms-shared-types/src/EstimatedResourcesUsage.ts",
+        "https://lmstudio.ai/download (version 0.4.24 build 1, fetched 2026-09-15)",
+        "https://lmstudio.ai/blog/0.4.0",
+        "https://lmstudio.ai/blog/lmstudio-v0.3.9",
+        "https://lmstudio.ai/blog/lmstudio-v0.3.27",
+        "https://lmstudio.ai/blog/lmstudio-v0.3.31",
+        "https://lmstudio.ai/blog/lmstudio-v0.3.32",
+        "https://lmstudio.ai/blog/lmstudio-v0.3.24",
+        "https://lmstudio.ai/changelog"
+      ],
+      "notes": "The app is closed source and no license text was fetched, so license is null. Flash Attention defaults to on for the CUDA (0.3.31), Vulkan and Metal (0.3.32) llama.cpp engines. The default context is unverified: 0.3.2 cut it from 8K to 4K, 0.3.24 added an app-wide 'default context length' setting, and the current value is not in the fetched docs."
+    },
+    {
+      "id": "vllm",
+      "name": "vLLM",
+      "version": "v0.29.0",
+      "commit": "98dff2a81d747d1dba01a47f939f48c3526d4206",
+      "released": "2026-09-09 (PyPI)",
+      "license": "Apache-2.0",
+      "backends": {
+        "CUDA": "yes",
+        "ROCm": "yes (ROCm 6.3+, wheels for 7.0/7.2.1)",
+        "Vulkan": "no",
+        "Metal": "plugin only: vLLM-Metal, community-maintained, MLX compute backend, mlx-community models",
+        "SYCL": "yes, Intel XPU (Data Center GPU, Arc; docs: 'initially supports basic model inference and serving'; needs vllm-xpu-kernels)",
+        "CPU-x86": "yes",
+        "CPU-ARM": "yes (Linux, NEON; FP32/FP16/BF16; macOS Apple-silicon CPU build is 'experimental', from source)",
+        "other": "Gaudi via vLLM-Gaudi plugin; TPU via tpu-inference"
+      },
+      "weight_formats": [
+        {
+          "id": "bf16",
+          "label": "FP16 / BF16",
+          "bpw": 16.0,
+          "bpw_nominal": 16.0,
+          "bpw_kind": "nominal-block",
+          "source": "dtype size",
+          "notes": null
+        },
+        {
+          "id": "fp8-w8",
+          "label": "FP8 W8A8 (per-channel or per-tensor weight scale)",
+          "bpw": 8.0,
+          "bpw_nominal": 8.0,
+          "bpw_kind": "derived",
+          "formula": "8 + scale/in_features (about 0 for per-tensor or per-channel)",
+          "source": "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/llm_compressor/fp8.md; https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/modelopt.md",
+          "notes": "Documented FP8_DYNAMIC and ModelOpt recipes ignore lm_head, which stays BF16. ModelOpt FP8_PB_WO uses 128x128 block scales."
+        },
+        {
+          "id": "awq-w4-g128",
+          "label": "AWQ 4-bit (group 128)",
+          "bpw": 4.15625,
+          "bpw_nominal": 4.15625,
+          "bpw_kind": "derived",
+          "formula": "4 + (fp16 scale 16 + packed 4-bit zero 4)/128",
+          "source": "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/auto_awq.md (q_group_size 128, zero_point True); https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/model_executor/layers/quantization/auto_awq.py (qweight/qzeros int32-packed, scales params_dtype)",
+          "notes": "Supported on Turing through Hopper, Intel GPU and x86 CPU; not on AMD GPU, Volta or Arm CPU (docs table)."
+        },
+        {
+          "id": "gptq-w4-g128",
+          "label": "GPTQ 4-bit (group 128)",
+          "bpw": 4.16,
+          "bpw_nominal": 4.15625,
+          "bpw_kind": "derived",
+          "formula": "4 + (fp16 scale 16 + packed zero 4)/128 + g_idx int32 per input column (32/out_features bits, about 0.008 at 4096)",
+          "source": "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/gptqmodel.md (bits=4, group_size=128); https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/model_executor/layers/quantization/auto_gptq.py",
+          "notes": "Supported on Volta through Hopper, Intel GPU and x86 CPU; not on AMD GPU or Arm CPU (docs table)."
+        },
+        {
+          "id": "ct-w4a16-g128",
+          "label": "compressed-tensors W4A16 (llm-compressor, group 128, symmetric)",
+          "bpw": 4.125,
+          "bpw_nominal": 4.125,
+          "bpw_kind": "derived",
+          "formula": "4 + 16/128 (bf16 scale, symmetric so no zero point)",
+          "source": "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/llm_compressor/int4.md",
+          "notes": "The documented recipe keeps lm_head unquantized (ignore=['lm_head'])."
+        },
+        {
+          "id": "nvfp4",
+          "label": "NVFP4 (ModelOpt)",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/16 (fp8 e4m3 per-16 scale) + one fp32 global scale per tensor",
+          "source": "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/model_executor/layers/quantization/modelopt.py (group_size=16, weight_scale float8_e4m3fn, weight_scale_2 fp32); https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/modelopt.md",
+          "notes": "Code logs 'the format is experimental and could change'. GPUs without native FP4 GEMM fall back to Marlin W4A16 weight-only."
+        },
+        {
+          "id": "mxfp4-moe",
+          "label": "MXFP4 (MoE experts only)",
+          "bpw": 4.25,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/32 (e8m0 scale per 32, OCP_MX_BLOCK_SIZE=32)",
+          "source": "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/model_executor/layers/quantization/mxfp4.py; https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/model_executor/layers/quantization/utils/ocp_mx_utils.py",
+          "notes": "Only routed experts are quantized. Linear layers: 'MXFP4 linear layer is not implemented - falling back to UnquantizedLinearMethod'. Attention is skipped as well."
+        },
+        {
+          "id": "gguf",
+          "label": "GGUF",
+          "bpw": null,
+          "bpw_kind": "inherits",
+          "source": "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/gguf.md",
+          "notes": "'Highly experimental and under-optimized'. Moved out of tree to vllm-gguf-plugin."
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "auto",
+          "bytes": 2.0,
+          "flag": "--kv-cache-dtype auto",
+          "requires": "Uses the model dtype (2 bytes for fp16/bf16). DeepSeek V3.2 defaults to fp8."
+        },
+        {
+          "id": "float16",
+          "bytes": 2.0,
+          "flag": "--kv-cache-dtype float16",
+          "requires": null
+        },
+        {
+          "id": "bfloat16",
+          "bytes": 2.0,
+          "flag": "--kv-cache-dtype bfloat16",
+          "requires": null
+        },
+        {
+          "id": "fp8",
+          "bytes": 1.0,
+          "flag": "--kv-cache-dtype fp8 (=fp8_e4m3)",
+          "requires": "CUDA 11.8+ or ROCm. Per-tensor scales, 1.0 unless calibrated (llm-compressor). --kv-cache-dtype-skip-layers sliding_window keeps those layers at model dtype."
+        },
+        {
+          "id": "fp8_e5m2",
+          "bytes": 1.0,
+          "flag": "--kv-cache-dtype fp8_e5m2",
+          "requires": "CUDA 11.8+"
+        },
+        {
+          "id": "fp8_inc",
+          "bytes": 1.0,
+          "flag": "--kv-cache-dtype fp8_inc",
+          "requires": "Intel Gaudi"
+        },
+        {
+          "id": "int8_per_token_head",
+          "bytes": 1.0,
+          "flag": "--kv-cache-dtype int8_per_token_head",
+          "requires": "Adds a 4-byte fp32 scale per (token, kv_head, K|V) (triton backend packing)"
+        },
+        {
+          "id": "fp8_per_token_head",
+          "bytes": 1.0,
+          "flag": "--kv-cache-dtype fp8_per_token_head",
+          "requires": "Adds a 4-byte fp32 scale per (token, kv_head, K|V)"
+        },
+        {
+          "id": "int4_per_token_head",
+          "bytes": 0.5,
+          "flag": "--kv-cache-dtype int4_per_token_head",
+          "requires": "Adds a 4-byte fp32 scale per (token, kv_head, K|V)"
+        },
+        {
+          "id": "nvfp4",
+          "bytes": 0.5625,
+          "flag": "--kv-cache-dtype nvfp4 (or nvfp4_4over6)",
+          "requires": "FlashInfer backend. Per side = head_size//2 + head_size//16 bytes."
+        },
+        {
+          "id": "turboquant_k8v4",
+          "bytes": null,
+          "flag": "--kv-cache-dtype turboquant_k8v4",
+          "requires": "Per head per token: K = head_dim bytes (fp8), V = ceil(head_dim*4/8)+4, total rounded up to even. head_dim 128 => 196 B for 256 elements (0.766 B/elem). Docstring: 2.6x."
+        },
+        {
+          "id": "turboquant_4bit_nc",
+          "bytes": null,
+          "flag": "--kv-cache-dtype turboquant_4bit_nc",
+          "requires": "K = ceil(hd*4/8)+2, V = ceil(hd*4/8)+4. hd 128 => 134 B (0.523 B/elem). Docstring: 3.8x."
+        },
+        {
+          "id": "turboquant_k3v4_nc",
+          "bytes": null,
+          "flag": "--kv-cache-dtype turboquant_k3v4_nc",
+          "requires": "K = ceil(hd*3/8)+2, V = ceil(hd*4/8)+4. hd 128 => 118 B (0.461 B/elem). Docstring says ~3.5x, the formula gives 4.3x at hd 128."
+        },
+        {
+          "id": "turboquant_3bit_nc",
+          "bytes": null,
+          "flag": "--kv-cache-dtype turboquant_3bit_nc",
+          "requires": "K = ceil(hd*3/8)+2, V = ceil(hd*3/8)+4. hd 128 => 102 B (0.398 B/elem). Docstring: 4.9x."
+        },
+        {
+          "id": "fp8_ds_mla",
+          "bytes": null,
+          "flag": "--kv-cache-dtype fp8_ds_mla",
+          "requires": "DeepSeek sparse-MLA custom layout: 656 bytes per token per layer (kv_lora_rank 512 + rope 64)"
+        }
+      ],
+      "memory_policy": {
+        "type": "fraction-prealloc",
+        "fraction": 0.92,
+        "default_context": "max_model_len defaults to the model config's maximum. -1/'auto' picks the largest length that fits. Startup fails if the KV pool cannot hold one max_model_len request.",
+        "parallel_multiplies_kv": false,
+        "default_parallel": "max_num_seqs 256 (GPUs < 70 GiB, or A100), 1024 (>= 70 GiB non-A100 and >= 160 GiB); CPU 128 x world_size for the API server",
+        "details": "requested = total_GPU_memory x gpu_memory_utilization (per instance, default 0.92). KV pool = requested - (weights + peak activations from a profile run at max_num_batched_tokens + non-torch memory) - CUDA graph estimate. The graph estimate is profiled and subtracted by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1). The pool is allocated up front and shared by all sequences as paged blocks (block_size 16). kv_cache_memory_bytes overrides the fraction. Startup errors if free memory < requested."
+      },
+      "attention_support": {
+        "swa_window_only": true,
+        "mla": true,
+        "linear_hybrid": true,
+        "ssm_hybrid": true,
+        "details": "The hybrid KV cache manager gives sliding-window layers only the most recent sliding_window tokens. If disable_hybrid_kv_cache_manager is set (default decided by environment/config), SWA layers are allocated like full attention. MLAAttentionSpec uses num_kv_heads=1, head_size = kv_lora_rank + qk_rope_head_dim, and no separate V. Mamba/GDN state uses mamba_cache_dtype (default = model). Model files present: qwen3_next, qwen3_5, jamba, falcon_h1, granitemoehybrid, nemotron_h, mamba2."
+      },
+      "offload": "--cpu-offload-gb N ('virtual' extra GPU memory for weights; needs a fast CPU-GPU interconnect); --kv-offloading-size GiB (KV to CPU, native or lmcache backend). There is no llama.cpp-style per-layer GPU/CPU split flag.",
+      "overhead_notes": "Not a constant. CUDA-graph memory is profiled and deducted inside the gpu_memory_utilization budget, and the log suggests an equivalent utilization. Peak activation is measured by a dummy forward pass at max_num_batched_tokens (2048 for the API server on < 70 GiB GPUs). CPU backend: VLLM_CPU_KVCACHE_SPACE, or auto-sized when unset.",
+      "sources": [
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/getting_started/installation/README.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/getting_started/installation/gpu.apple.inc.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/getting_started/installation/cpu.apple.inc.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/getting_started/installation/cpu.arm.inc.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/getting_started/installation/gpu.xpu.inc.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/getting_started/installation/gpu.rocm.inc.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/README.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/features/quantization/quantized_kvcache.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/configuration/conserving_memory.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/docs/design/hybrid_kv_cache_manager.md",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/config/cache.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/config/model.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/config/scheduler.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/config/offload.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/engine/arg_utils.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/worker/gpu_worker.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/worker/utils.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/worker/cpu_worker.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/envs.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/kv_cache_interface.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/core/kv_cache_utils.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/utils/torch_utils.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/attention/backends/flashinfer.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/attention/backends/triton_attn.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/model_executor/layers/quantization/turboquant/config.py",
+        "https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/model_executor/layers/attention/mla_attention.py"
+      ],
+      "notes": "The default gpu_memory_utilization is 0.92 at v0.29.0, not the long-documented 0.9. Several docs pages (metrics.md, usage_stats.md, benchmark examples) still show 0.9."
+    },
+    {
+      "id": "sglang",
+      "name": "SGLang",
+      "version": "v0.5.19",
+      "commit": "0bcd822377da7b5718e674eaf9c870d349424dd1",
+      "released": "2026-09-03 (tag commit)",
+      "license": "Apache-2.0",
+      "backends": {
+        "CUDA": "yes (incl. Jetson Orin)",
+        "ROCm": "yes (AMD GPU guide)",
+        "Vulkan": "no",
+        "Metal": "yes via MLX runtime (SGLANG_USE_MLX=1, macOS 14+, MLX >= 0.32.0; page not listed in hardware overview index)",
+        "SYCL": "yes, Intel XPU (Arc / Arc Pro B-series; XPU graph and PD disaggregation marked [Experimental])",
+        "CPU-x86": "yes (Intel Xeon with AMX, 4th gen+)",
+        "CPU-ARM": null,
+        "other": "Ascend NPU, TPU, Moore Threads GPU"
+      },
+      "weight_formats": [
+        {
+          "id": "bf16",
+          "label": "FP16 / BF16",
+          "bpw": 16.0,
+          "bpw_nominal": 16.0,
+          "bpw_kind": "nominal-block",
+          "source": "dtype size",
+          "notes": null
+        },
+        {
+          "id": "fp8-w8",
+          "label": "FP8 W8A8 (per-channel or per-tensor weight scale)",
+          "bpw": 8.0,
+          "bpw_nominal": 8.0,
+          "bpw_kind": "derived",
+          "formula": "8 + scale/in_features (about 0 for per-tensor or per-channel)",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/server_args.py (QUANTIZATION_CHOICES); https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/advanced_features/quantization.mdx",
+          "notes": "Documented FP8_DYNAMIC and ModelOpt recipes ignore lm_head, which stays BF16. ModelOpt FP8_PB_WO uses 128x128 block scales."
+        },
+        {
+          "id": "awq-w4-g128",
+          "label": "AWQ 4-bit (group 128)",
+          "bpw": 4.15625,
+          "bpw_nominal": 4.15625,
+          "bpw_kind": "derived",
+          "formula": "4 + (fp16 scale 16 + packed 4-bit zero 4)/128",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/advanced_features/quantization.mdx; layout assumed as vLLM-format AWQ (same checkpoints)",
+          "notes": "Group 128 from doc examples."
+        },
+        {
+          "id": "gptq-w4-g128",
+          "label": "GPTQ 4-bit (group 128)",
+          "bpw": 4.16,
+          "bpw_nominal": 4.15625,
+          "bpw_kind": "derived",
+          "formula": "4 + (fp16 scale 16 + packed zero 4)/128 + g_idx int32 per input column (32/out_features bits, about 0.008 at 4096)",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/advanced_features/quantization.mdx (QuantizeConfig(bits=4, group_size=128))",
+          "notes": null
+        },
+        {
+          "id": "nvfp4",
+          "label": "NVFP4 (ModelOpt)",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/16 (fp8 e4m3 per-16 scale) + one fp32 global scale per tensor",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/layers/quantization/modelopt_quant.py; https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/advanced_features/quantization.mdx",
+          "notes": "modelopt_fp4. On SM80-SM90 'auto' selects Marlin (W4A16). petit_nvfp4 for ROCm."
+        },
+        {
+          "id": "mxfp4-moe",
+          "label": "MXFP4 (MoE experts only)",
+          "bpw": 4.25,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/32 (e8m0 scale per 32, OCP_MX_BLOCK_SIZE=32)",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/server_args.py ('mxfp4',  # MOE-only.)",
+          "notes": "MoE-only per server_args comment; GPU path needs CDNA3/CDNA4 MXFP support via Aiter."
+        },
+        {
+          "id": "gguf",
+          "label": "GGUF",
+          "bpw": null,
+          "bpw_kind": "inherits",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/server_args.py",
+          "notes": "'gguf' is in QUANTIZATION_CHOICES"
+        },
+        {
+          "id": "sglang-mlx_q4-4bit-g64",
+          "label": "MLX 4-bit affine (group 64)",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 4 + 32/64",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/hardware-platforms/apple_metal.mdx; https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/server_args.py",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them. --quantization mlx_q4 (SGLANG_USE_MLX=1); on-the-fly via mlx_lm.utils.quantize_model."
+        },
+        {
+          "id": "sglang-mlx_q8-8bit-g64",
+          "label": "MLX 8-bit affine (group 64)",
+          "bpw": 8.5,
+          "bpw_nominal": 8.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 8 + 32/64",
+          "source": "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/hardware-platforms/apple_metal.mdx",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them. --quantization mlx_q8."
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "auto",
+          "bytes": 2.0,
+          "flag": "--kv-cache-dtype auto",
+          "requires": "model dtype"
+        },
+        {
+          "id": "bf16",
+          "bytes": 2.0,
+          "flag": "--kv-cache-dtype bf16|bfloat16",
+          "requires": null
+        },
+        {
+          "id": "fp8_e4m3",
+          "bytes": 1.0,
+          "flag": "--kv-cache-dtype fp8_e4m3",
+          "requires": "CUDA 11.8+; per-tensor scalar scales only (checkpoint k_scale/v_scale or --quantization-param-path, else 1.0)"
+        },
+        {
+          "id": "fp8_e5m2",
+          "bytes": 1.0,
+          "flag": "--kv-cache-dtype fp8_e5m2",
+          "requires": "CUDA 11.8+"
+        },
+        {
+          "id": "mxfp8",
+          "bytes": 1.03125,
+          "flag": "--kv-cache-dtype mxfp8",
+          "requires": "FA4 backend; fp8 e4m3 plus one UE8M0 scale per 32 elements"
+        },
+        {
+          "id": "nvfp4",
+          "bytes": 0.5625,
+          "flag": "--kv-cache-dtype nvfp4",
+          "requires": "CUDA 12.8+, PyTorch 2.8+; FP4 'currently experimental'; 4 bits + 8-bit scale per 16"
+        },
+        {
+          "id": "fp4_mx_block16",
+          "bytes": 0.5625,
+          "flag": "--kv-cache-dtype fp4_mx_block16 (also fp4_e2m1)",
+          "requires": "CUDA 12.8+, PyTorch 2.8+; experimental; scale_block_size=16 (docs: up to 3.56x)"
+        }
+      ],
+      "memory_policy": {
+        "type": "fraction-prealloc",
+        "fraction": null,
+        "default_context": "context_length defaults to the model config.json value",
+        "parallel_multiplies_kv": false,
+        "default_parallel": "max_running_requests unset (bounded by pool); cuda-graph decode max_bs by GPU size: <20 GiB 8, <35 GiB 24, <60 GiB 32, <90/<160 GiB 256, else 512 (tp<4)",
+        "details": "mem_fraction_static = (weights + KV pool)/GPU memory. When unset it is computed as (gpu_mem_MB - reserved_mem)/gpu_mem_MB, where reserved_mem (MB) = 512 + 1.5*max(chunked_prefill_size, 2048) + tp*pp/8*1024 + graph reserve (2*decode max_bs + 8*len(prefill graph bs), or 1.5 GiB for MLA), with a floor of 10 GiB on GPUs > 60 GiB. Default chunked_prefill_size is 2048 below 35 GiB, 4096 below 60 GiB, 8192 below 160 GiB, else 16384. Fallback 0.88 when GPU memory is unknown; VLMs get a further adjustment. max_total_tokens is derived from that pool and shared across requests (radix cache)."
+      },
+      "attention_support": {
+        "swa_window_only": false,
+        "mla": true,
+        "linear_hybrid": true,
+        "ssm_hybrid": true,
+        "swa_pool_ratio": 0.8,
+        "details": "The hybrid SWA memory pool (on by default; --disable-hybrid-swa-memory) sizes SWA-layer token capacity at swa_full_tokens_ratio (default 0.8) of full-layer capacity. It is ratio-based, not a strict window. MLATokenToKVPool kv_cache_dim = kv_lora_rank + qk_rope_head_dim. HybridLinearKVPool + MambaPool serve GDN/Mamba (mamba_full_memory_ratio 0.9; mamba_ssm_dtype from the model config, float32/bf16/fp16). Model files: qwen3_5, qwen3_next, nemotron_h, falcon_h1, gpt_oss, gemma3."
+      },
+      "offload": "--cpu-offload-gb N (RAM reserved for weight offload) with offload_group_size/offload_num_in_group/offload_prefetch_step. No -ngl-style layer count.",
+      "overhead_notes": "reserved_mem heuristic above: activations 1.5 MB per chunked-prefill token, 512 MB constant metadata, plus graph buffers. SGLANG_ENABLE_POST_CAPTURE_KV_SIZING (default False) would size KV after graph capture instead, reserving only 1536 MB + parallel slack.",
+      "sources": [
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/hardware-platforms/overview.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/hardware-platforms/apple_metal.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/hardware-platforms/cpu_server.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/hardware-platforms/xpu.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/hardware-platforms/amd_gpu.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/get-started/install.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/advanced_features/quantized_kv_cache.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/docs/docs/advanced_features/quantization.mdx",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/server_args.py",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/arg_groups/memory_hook.py",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/arg_groups/overrides.py",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/arg_groups/cuda_graph_hook.py",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/environ.py",
+        "https://github.com/sgl-project/sglang/blob/v0.5.19/python/sglang/srt/mem_cache/memory_pool.py"
+      ],
+      "notes": "mem_fraction_static has no fixed default: it is None and resolved per GPU size, so 'fraction' is null. For a 24 GiB card the formula gives about 0.83 with prefill CUDA graphs reserved (4096 MB) and about 0.85 without (3760 MB). That figure is derived, not printed in docs."
+    },
+    {
+      "id": "mlx-lm",
+      "name": "MLX (mlx-lm)",
+      "version": "mlx-lm v0.31.3 + mlx v0.32.2",
+      "commit": "mlx-lm ed1fca4cef15a824c5f1702c80f70b4cffc8e4dd; mlx 1f8e74e3f12f31365464a6867c6579f0e9b29d85",
+      "released": "mlx-lm 2026-04-22; mlx 2026-08-25",
+      "license": "MIT",
+      "backends": {
+        "CUDA": "yes (pip install mlx[cuda12] / mlx[cuda13]; Linux, SM >= 7.5, driver >= 550.54.14; mlx-lm extras cuda12/cuda13). PyPI also ships win_amd64 CUDA wheels that install.rst does not document.",
+        "ROCm": "no",
+        "Vulkan": "no",
+        "Metal": "yes (Apple Silicon, macOS >= 14)",
+        "SYCL": "no",
+        "CPU-x86": "yes (mlx[cpu], Linux glibc >= 2.35; PyPI also has win_amd64)",
+        "CPU-ARM": "yes (Apple Silicon CPU device; mlx-cpu wheels for manylinux aarch64 and win_arm64)"
+      },
+      "weight_formats": [
+        {
+          "id": "mlx-8bit-g64",
+          "label": "MLX 8-bit affine (group 64)",
+          "bpw": 8.5,
+          "bpw_nominal": 8.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 8 + 32/64",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them."
+        },
+        {
+          "id": "mlx-6bit-g64",
+          "label": "MLX 6-bit affine (group 64)",
+          "bpw": 6.5,
+          "bpw_nominal": 6.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 6 + 32/64",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them."
+        },
+        {
+          "id": "mlx-5bit-g64",
+          "label": "MLX 5-bit affine (group 64)",
+          "bpw": 5.5,
+          "bpw_nominal": 5.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 5 + 32/64",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them."
+        },
+        {
+          "id": "mlx-4bit-g64",
+          "label": "MLX 4-bit affine (group 64)",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 4 + 32/64",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them. Default mode for mx.quantize / mlx_lm.convert: affine, group 64, 4 bits."
+        },
+        {
+          "id": "mlx-3bit-g64",
+          "label": "MLX 3-bit affine (group 64)",
+          "bpw": 3.5,
+          "bpw_nominal": 3.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 3 + 32/64",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them."
+        },
+        {
+          "id": "mlx-2bit-g64",
+          "label": "MLX 2-bit affine (group 64)",
+          "bpw": 2.5,
+          "bpw_nominal": 2.5,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 2 + 32/64",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them."
+        },
+        {
+          "id": "mlx-4bit-g32",
+          "label": "MLX 4-bit affine (group 32)",
+          "bpw": 5.0,
+          "bpw_nominal": 5.0,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 4 + 32/32",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them."
+        },
+        {
+          "id": "mlx-4bit-g128",
+          "label": "MLX 4-bit affine (group 128)",
+          "bpw": 4.25,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "derived",
+          "formula": "bits + (scale 16 + bias 16)/group = 4 + 32/128",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "scale/bias dtype = 'same as input' (fp16/bf16 checkpoints => 16 bits each). Embedding and Linear both implement to_quantized, so embeddings/lm_head are quantized too unless a predicate excludes them."
+        },
+        {
+          "id": "mlx-mxfp4",
+          "label": "MLX mxfp4",
+          "bpw": 4.25,
+          "bpw_nominal": 4.25,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/32",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "shared 8-bit scale per group (e8m0 for mx*, e4m3 for nvfp4); nvfp4 may add one fp32 global scale per tensor (negligible)"
+        },
+        {
+          "id": "mlx-nvfp4",
+          "label": "MLX nvfp4",
+          "bpw": 4.5,
+          "bpw_nominal": 4.5,
+          "bpw_kind": "derived",
+          "formula": "4 + 8/16",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "shared 8-bit scale per group (e8m0 for mx*, e4m3 for nvfp4); nvfp4 may add one fp32 global scale per tensor (negligible)"
+        },
+        {
+          "id": "mlx-mxfp8",
+          "label": "MLX mxfp8",
+          "bpw": 8.25,
+          "bpw_nominal": 8.25,
+          "bpw_kind": "derived",
+          "formula": "8 + 8/32",
+          "source": "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+          "notes": "shared 8-bit scale per group (e8m0 for mx*, e4m3 for nvfp4); nvfp4 may add one fp32 global scale per tensor (negligible)"
+        },
+        {
+          "id": "mlx-mixed",
+          "label": "mlx-lm mixed_2_6 / mixed_3_4 / mixed_3_6 / mixed_4_6",
+          "bpw": null,
+          "bpw_kind": "model-dependent",
+          "source": "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/convert.py (mixed_quant_predicate_builder)",
+          "notes": "The first 1/8, the last 1/8 and every third layer in between get high bits (6, or 4 for mixed_3_4). convert prints '[INFO] Quantized model with X bits per weight' (model bytes*8/params)."
+        },
+        {
+          "id": "bf16",
+          "label": "FP16 / BF16 (unquantized)",
+          "bpw": 16.0,
+          "bpw_nominal": 16.0,
+          "bpw_kind": "nominal-block",
+          "source": "dtype size",
+          "notes": null
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "fp16",
+          "bytes": 2.0,
+          "flag": "(default: model dtype; KVCache grows in 256-token steps)",
+          "requires": null
+        },
+        {
+          "id": "q8-g64",
+          "bytes": 1.0625,
+          "flag": "--kv-bits 8 --kv-group-size 64 [--quantized-kv-start N]",
+          "requires": "QuantizedKVCache: uint32-packed data + scales and biases in the key dtype per group. CLI default --quantized-kv-start is 5000 (generate_step and speculative_generate_step API default 0). Applies to caches implementing to_quantized; rotating/Arrays caches are not quantized."
+        },
+        {
+          "id": "q6-g64",
+          "bytes": 0.8125,
+          "flag": "--kv-bits 6 --kv-group-size 64 [--quantized-kv-start N]",
+          "requires": "QuantizedKVCache: uint32-packed data + scales and biases in the key dtype per group. CLI default --quantized-kv-start is 5000 (generate_step and speculative_generate_step API default 0). Applies to caches implementing to_quantized; rotating/Arrays caches are not quantized."
+        },
+        {
+          "id": "q4-g64",
+          "bytes": 0.5625,
+          "flag": "--kv-bits 4 --kv-group-size 64 [--quantized-kv-start N]",
+          "requires": "QuantizedKVCache: uint32-packed data + scales and biases in the key dtype per group. CLI default --quantized-kv-start is 5000 (generate_step and speculative_generate_step API default 0). Applies to caches implementing to_quantized; rotating/Arrays caches are not quantized."
+        },
+        {
+          "id": "q3-g64",
+          "bytes": 0.4375,
+          "flag": "--kv-bits 3 --kv-group-size 64 [--quantized-kv-start N]",
+          "requires": "QuantizedKVCache: uint32-packed data + scales and biases in the key dtype per group. CLI default --quantized-kv-start is 5000 (generate_step and speculative_generate_step API default 0). Applies to caches implementing to_quantized; rotating/Arrays caches are not quantized."
+        },
+        {
+          "id": "q2-g64",
+          "bytes": 0.3125,
+          "flag": "--kv-bits 2 --kv-group-size 64 [--quantized-kv-start N]",
+          "requires": "QuantizedKVCache: uint32-packed data + scales and biases in the key dtype per group. CLI default --quantized-kv-start is 5000 (generate_step and speculative_generate_step API default 0). Applies to caches implementing to_quantized; rotating/Arrays caches are not quantized."
+        }
+      ],
+      "memory_policy": {
+        "type": "on-demand",
+        "fraction": null,
+        "default_context": "No preset limit. The cache grows with actual tokens. --max-kv-size N switches to a fixed-size rotating cache.",
+        "parallel_multiplies_kv": true,
+        "default_parallel": "mlx_lm.server --decode-concurrency 32, --prompt-concurrency 8",
+        "details": "Each sequence owns its cache, so memory is the sum of the tokens in flight (worst case = concurrency x context). On Metal, generation raises the wired limit to max_recommended_working_set_size and warns when the model exceeds 90% of it. README: raise it with `sudo sysctl iogpu.wired_limit_mb=N` (macOS 15+). The server prompt cache holds 10 distinct KV caches by default (--prompt-cache-size), optionally capped with --prompt-cache-bytes."
+      },
+      "attention_support": {
+        "swa_window_only": true,
+        "mla": true,
+        "linear_hybrid": true,
+        "ssm_hybrid": true,
+        "details": "gemma3_text and gpt_oss put SWA layers on RotatingKVCache(max_size=sliding_window). deepseek_v3 caches kv_latent (kv_lora_rank) + k_pe (rope dim) instead of full K/V. qwen3_5 linear layers use ArraysCache(size=2) (fixed-size state). Model files exist for nemotron_h, falcon_h1, jamba, granitemoehybrid, kimi_linear, mamba2, qwen3_next; their cache classes were not individually inspected."
+      },
+      "offload": "None: unified memory, no GPU/CPU layer split. Models above the wired limit page and slow down.",
+      "overhead_notes": null,
+      "sources": [
+        "https://github.com/ml-explore/mlx/blob/v0.32.2/README.md",
+        "https://github.com/ml-explore/mlx/blob/v0.32.2/docs/src/install.rst",
+        "https://github.com/ml-explore/mlx/blob/v0.32.2/python/src/ops.cpp (quantize docstring, table of modes)",
+        "https://github.com/ml-explore/mlx/blob/v0.32.2/mlx/ops.cpp (affine_quantize, pack_and_quantize)",
+        "https://github.com/ml-explore/mlx/blob/v0.32.2/python/mlx/nn/layers/quantized.py",
+        "https://github.com/ml-explore/mlx/blob/v0.32.2/python/mlx/nn/layers/embedding.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/README.md",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/setup.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/generate.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/models/cache.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/utils.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/convert.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/server.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/models/deepseek_v3.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/models/qwen3_5.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/models/gemma3_text.py",
+        "https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/models/gpt_oss.py",
+        "https://pypi.org/pypi/mlx/0.32.2/json",
+        "https://pypi.org/pypi/mlx-cpu/0.32.2/json",
+        "https://pypi.org/pypi/mlx-cuda-12/0.32.2/json"
+      ],
+      "notes": "mlx-lm's latest tag, v0.31.3 (2026-04-22), is five months old. oMLX pins a later mlx-lm main commit (ab1806e), so behaviour on main may differ. MLX CUDA is not labelled experimental in install.rst."
+    },
+    {
+      "id": "omlx",
+      "name": "oMLX",
+      "version": "v0.6.4",
+      "commit": "1d7826185c5b5b69b38b27cbe57d7597b7551fd7",
+      "released": "2026-08-30 (tag commit)",
+      "license": "Apache-2.0",
+      "backends": {
+        "CUDA": "no",
+        "ROCm": "no",
+        "Vulkan": "no",
+        "Metal": "yes (Apple Silicon M1-M5, macOS 15+)",
+        "SYCL": "no",
+        "CPU-x86": "no",
+        "CPU-ARM": "Apple Silicon only (MLX device)"
+      },
+      "weight_formats": [
+        {
+          "id": "mlx",
+          "label": "MLX checkpoints (affine 2-8 bit, mxfp4, nvfp4, mxfp8)",
+          "bpw": null,
+          "bpw_kind": "inherits",
+          "source": "see engine 'mlx-lm'; oMLX pins mlx==0.32.0 and mlx-lm@ab1806e",
+          "notes": "Same bpw formulas as MLX"
+        },
+        {
+          "id": "oq2",
+          "label": "oQ2",
+          "bpw": 2.9,
+          "bpw_kind": "documented-target",
+          "source": "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+          "notes": "base 2-bit affine g64, sensitivity boosts"
+        },
+        {
+          "id": "oq3",
+          "label": "oQ3",
+          "bpw": 3.5,
+          "bpw_kind": "documented-target",
+          "source": "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+          "notes": "base 3-bit affine g64"
+        },
+        {
+          "id": "oq3.5",
+          "label": "oQ3.5",
+          "bpw": 3.8,
+          "bpw_kind": "documented-target",
+          "source": "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+          "notes": null
+        },
+        {
+          "id": "oq4",
+          "label": "oQ4",
+          "bpw": 4.6,
+          "bpw_kind": "documented-target",
+          "source": "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+          "notes": "recommended; base 4-bit affine g64 (4.5) + boosts"
+        },
+        {
+          "id": "oq5",
+          "label": "oQ5",
+          "bpw": 5.5,
+          "bpw_kind": "documented-target",
+          "source": "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+          "notes": null
+        },
+        {
+          "id": "oq6",
+          "label": "oQ6",
+          "bpw": 6.5,
+          "bpw_kind": "documented-target",
+          "source": "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+          "notes": null
+        },
+        {
+          "id": "oq8",
+          "label": "oQ8",
+          "bpw": 8.6,
+          "bpw_kind": "documented-target",
+          "source": "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+          "notes": "base mxfp8 g32 (8.25) + protections"
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "fp16",
+          "bytes": 2.0,
+          "flag": "(default: mlx-lm KVCache in model dtype)",
+          "requires": null
+        },
+        {
+          "id": "turboquant-2",
+          "bytes": null,
+          "flag": "per-model setting turboquant_kv_enabled=true, turboquant_kv_bits=2 (admin UI / model settings)",
+          "requires": "mlx-vlm TurboQuant MSE codec (pinned 78b96eb): per vector = fp16 norm (2 B) + ceil(head_dim*bits/32) uint32 words. K bits=2, V bits=2. bytes/elem ~ bits/8 + 2/head_dim (+ word padding); head_dim 128, 4-bit => 0.5156. turboquant_skip_last option."
+        },
+        {
+          "id": "turboquant-2.5",
+          "bytes": null,
+          "flag": "per-model setting turboquant_kv_enabled=true, turboquant_kv_bits=2.5 (admin UI / model settings)",
+          "requires": "mlx-vlm TurboQuant MSE codec (pinned 78b96eb): per vector = fp16 norm (2 B) + ceil(head_dim*bits/32) uint32 words. K bits=2, V bits=3 (fractional: keys floor, values ceil). bytes/elem ~ bits/8 + 2/head_dim (+ word padding); head_dim 128, 4-bit => 0.5156. turboquant_skip_last option."
+        },
+        {
+          "id": "turboquant-3",
+          "bytes": null,
+          "flag": "per-model setting turboquant_kv_enabled=true, turboquant_kv_bits=3 (admin UI / model settings)",
+          "requires": "mlx-vlm TurboQuant MSE codec (pinned 78b96eb): per vector = fp16 norm (2 B) + ceil(head_dim*bits/32) uint32 words. K bits=3, V bits=3. bytes/elem ~ bits/8 + 2/head_dim (+ word padding); head_dim 128, 4-bit => 0.5156. turboquant_skip_last option."
+        },
+        {
+          "id": "turboquant-3.5",
+          "bytes": null,
+          "flag": "per-model setting turboquant_kv_enabled=true, turboquant_kv_bits=3.5 (admin UI / model settings)",
+          "requires": "mlx-vlm TurboQuant MSE codec (pinned 78b96eb): per vector = fp16 norm (2 B) + ceil(head_dim*bits/32) uint32 words. K bits=3, V bits=4 (fractional: keys floor, values ceil). bytes/elem ~ bits/8 + 2/head_dim (+ word padding); head_dim 128, 4-bit => 0.5156. turboquant_skip_last option."
+        },
+        {
+          "id": "turboquant-4",
+          "bytes": null,
+          "flag": "per-model setting turboquant_kv_enabled=true, turboquant_kv_bits=4 (admin UI / model settings)",
+          "requires": "mlx-vlm TurboQuant MSE codec (pinned 78b96eb): per vector = fp16 norm (2 B) + ceil(head_dim*bits/32) uint32 words. K bits=4, V bits=4. bytes/elem ~ bits/8 + 2/head_dim (+ word padding); head_dim 128, 4-bit => 0.5156. turboquant_skip_last option."
+        },
+        {
+          "id": "turboquant-6",
+          "bytes": null,
+          "flag": "per-model setting turboquant_kv_enabled=true, turboquant_kv_bits=6 (admin UI / model settings)",
+          "requires": "mlx-vlm TurboQuant MSE codec (pinned 78b96eb): per vector = fp16 norm (2 B) + ceil(head_dim*bits/32) uint32 words. K bits=6, V bits=6. bytes/elem ~ bits/8 + 2/head_dim (+ word padding); head_dim 128, 4-bit => 0.5156. turboquant_skip_last option."
+        },
+        {
+          "id": "turboquant-8",
+          "bytes": null,
+          "flag": "per-model setting turboquant_kv_enabled=true, turboquant_kv_bits=8 (admin UI / model settings)",
+          "requires": "mlx-vlm TurboQuant MSE codec (pinned 78b96eb): per vector = fp16 norm (2 B) + ceil(head_dim*bits/32) uint32 words. K bits=8, V bits=8. bytes/elem ~ bits/8 + 2/head_dim (+ word padding); head_dim 128, 4-bit => 0.5156. turboquant_skip_last option."
+        },
+        {
+          "id": "ssd-cold-tier",
+          "bytes": null,
+          "flag": "--paged-ssd-cache-dir DIR (default ~/.omlx/cache), ssd_cache_max_size auto = 10% of SSD; --hot-cache-max-size (default 0 = disabled)",
+          "requires": "Not a dtype. Evicted KV blocks go to SSD as safetensors and are restored on a prefix hit. It does not shrink the RAM KV of active requests."
+        }
+      ],
+      "memory_policy": {
+        "type": "ceiling",
+        "fraction": null,
+        "default_context": "The model's native context when discovered (optional max_context_window_policy caps it). Fallback max_context_window = 32768 when unknown; per-model override max_context_window.",
+        "parallel_multiplies_kv": true,
+        "default_parallel": "max_concurrent_requests 8",
+        "details": "Hard ceiling = min(static, dynamic, metal_cap). static = total RAM - tier reserve: safe 8 GiB, balanced 6 GiB (default tier), aggressive 4 GiB, custom 2 GiB; machines < 24 GiB always reserve 4 GiB. dynamic = oMLX phys + free + inactive + active x (0.2/0.5/0.8), or the user GB for custom (--memory-guard-gb). metal_cap = iogpu.wired_limit_mb if set, else max_recommended_working_set_size. Soft watermark (tier: 0.85/0.90/0.925/0.85) pauses admission and evicts LRU models; hard 0.95 aborts in-flight work. KV is paged (block-based, prefix sharing, CoW) and grows on demand."
+      },
+      "attention_support": {
+        "swa_window_only": null,
+        "mla": null,
+        "linear_hybrid": true,
+        "ssm_hybrid": null,
+        "details": "Models come from the pinned mlx-lm commit (RotatingKVCache for SWA, latent cache for DeepSeek V3, ArraysCache for Qwen3.5 GDN at v0.31.3), but oMLX's paged cache path was not verified to preserve window-only storage. GDN state support is explicit: gdn_snapshot_storage auto|ssd_sidecar|embedded, gdn_sidecar_precision fp32. README mentions rotating-KV limits only for distributed mode."
+      },
+      "offload": "No weight offload (unified memory). KV blocks tier to SSD (cold) and optionally to a RAM hot cache.",
+      "overhead_notes": "Static reserve per tier (above). _HOT_CACHE_RESERVATION_SLACK_BYTES = 512 MiB. No runtime compute-buffer figure is documented.",
+      "sources": [
+        "https://github.com/jundot/omlx/blob/v0.6.4/README.md",
+        "https://github.com/jundot/omlx/blob/v0.6.4/pyproject.toml",
+        "https://github.com/jundot/omlx/blob/v0.6.4/omlx/settings.py",
+        "https://github.com/jundot/omlx/blob/v0.6.4/omlx/process_memory_enforcer.py",
+        "https://github.com/jundot/omlx/blob/v0.6.4/omlx/model_settings.py",
+        "https://github.com/jundot/omlx/blob/v0.6.4/omlx/turboquant_kv.py",
+        "https://github.com/jundot/omlx/blob/v0.6.4/omlx/cli.py",
+        "https://github.com/jundot/omlx/blob/v0.6.4/docs/oQ_Quantization.md",
+        "https://github.com/Blaizzy/mlx-vlm/blob/78b96eb5462141447b9a6b4943ef553891da56dd/mlx_vlm/turboquant.py"
+      ],
+      "notes": "The README says the process memory limit defaults to 'system RAM - 8GB', but code at v0.6.4 defaults to tier 'balanced' = RAM - 6 GiB (8 GiB is the 'safe' tier). MemorySettings.soft_threshold defaults to 0.85 while the enforcer's balanced tier uses 0.90 (a saved 0.85 counts as legacy). v0.7.0.dev2 exists but is a pre-release."
+    },
+    {
+      "id": "exllamav3",
+      "name": "ExLlamaV3",
+      "version": "v1.5.0",
+      "commit": "0740edc2da569fb99174023c1d2988b1e98cb41e",
+      "released": "2026-09-13",
+      "license": "MIT",
+      "backends": {
+        "CUDA": "yes (PyTorch CUDA >= 12.4; cu124-cu132 extras)",
+        "ROCm": "undocumented (setup.py adds -DHIPBLAS_USE_HIP_HALF when torch is a HIP build; no ROCm install docs)",
+        "Vulkan": "no",
+        "Metal": "no",
+        "SYCL": "no",
+        "CPU-x86": "MoE expert offload only (AVX2/AVX512), not standalone",
+        "CPU-ARM": "no"
+      },
+      "weight_formats": [
+        {
+          "id": "exl3",
+          "label": "EXL3 (QTIP-based trellis)",
+          "bpw": null,
+          "bpw_kind": "user-chosen",
+          "formula": "-b/--bits = target average bpw (float); -hb/--head_bits lm_head default 6; -mb MTP default 4; vision default 6 or 16; -hq raises select layers (+0.05-0.10 bpw on MoE)",
+          "source": "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/doc/convert.md",
+          "notes": "The file's bpw is the requested average, set per quant. Embedding storage was not verified."
+        }
+      ],
+      "kv_cache_dtypes": [
+        {
+          "id": "fp16",
+          "bytes": 2.0,
+          "flag": "Cache(model, max_num_tokens, layer_type=CacheLayer_fp16)",
+          "requires": null
+        },
+        {
+          "id": "q8",
+          "bytes": 1.0625,
+          "flag": "CacheLayer_quant k_bits=8 v_bits=8",
+          "requires": "int32-packed token_dim*bits bits + fp16 scale per 32 elements (token_dim//32). EXL3_QC_STAGING=1 (default) also reserves an fp16 scratch."
+        },
+        {
+          "id": "q6",
+          "bytes": 0.8125,
+          "flag": "CacheLayer_quant k_bits=6 v_bits=6",
+          "requires": "int32-packed token_dim*bits bits + fp16 scale per 32 elements (token_dim//32). EXL3_QC_STAGING=1 (default) also reserves an fp16 scratch."
+        },
+        {
+          "id": "q5",
+          "bytes": 0.6875,
+          "flag": "CacheLayer_quant k_bits=5 v_bits=5",
+          "requires": "int32-packed token_dim*bits bits + fp16 scale per 32 elements (token_dim//32). EXL3_QC_STAGING=1 (default) also reserves an fp16 scratch."
+        },
+        {
+          "id": "q4",
+          "bytes": 0.5625,
+          "flag": "CacheLayer_quant k_bits=4 v_bits=4",
+          "requires": "int32-packed token_dim*bits bits + fp16 scale per 32 elements (token_dim//32). EXL3_QC_STAGING=1 (default) also reserves an fp16 scratch."
+        },
+        {
+          "id": "q3",
+          "bytes": 0.4375,
+          "flag": "CacheLayer_quant k_bits=3 v_bits=3",
+          "requires": "int32-packed token_dim*bits bits + fp16 scale per 32 elements (token_dim//32). EXL3_QC_STAGING=1 (default) also reserves an fp16 scratch."
+        },
+        {
+          "id": "q2",
+          "bytes": 0.3125,
+          "flag": "CacheLayer_quant k_bits=2 v_bits=2",
+          "requires": "int32-packed token_dim*bits bits + fp16 scale per 32 elements (token_dim//32). EXL3_QC_STAGING=1 (default) also reserves an fp16 scratch."
+        }
+      ],
+      "memory_policy": {
+        "type": "ctx-prealloc",
+        "fraction": null,
+        "default_context": null,
+        "parallel_multiplies_kv": false,
+        "default_parallel": "Cache max_batch_size 16 (recurrent state slots)",
+        "details": "Cache(max_num_tokens) is allocated at model load in 256-token pages and shared by all jobs ('total number of tokens that can be allocated across concurrent jobs; seq_len * batch_size <= max_num_tokens'). Recurrent models reserve max_batch_size state slots (+ max_history)."
+      },
+      "attention_support": {
+        "swa_window_only": null,
+        "mla": true,
+        "linear_hybrid": true,
+        "ssm_hybrid": true,
+        "details": "cache/mla.py stores ckv (kv_lora_rank) + kpe (qk_rope_head_dim) per token. README lists Qwen 3-Next and Qwen 3.5 (GDN) and NemotronH, with cache/recurrent.py. SWA models (Gemma 2/3, GPT-OSS) are supported, but whether SWA layers get window-sized cache was not verified. The docstring says layer_type only affects global-attention layers."
+      },
+      "offload": "Multi-GPU layer split / tensor parallel; experimental -mcl/--moe_cpu_offload N runs routed experts of the first N MoE layers on CPU (layer-split mode only).",
+      "overhead_notes": "EXL3_QC_STAGING=1 (default) reserves an fp16 scratch of 2*max_num_tokens*num_kv_heads*head_dim elements per device when a quantized cache is used (docs: ~4 GB at 1M tokens, 8 kv heads x 128). EXL3_QC_STAGING=0 removes it.",
+      "sources": [
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/README.md",
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/doc/convert.md",
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/doc/env_vars.md",
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/setup.py",
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/exllamav3/cache/cache.py",
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/exllamav3/cache/quant.py",
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/exllamav3/cache/mla.py",
+        "https://github.com/turboderp-org/exllamav3/blob/v1.5.0/exllamav3/constants.py"
+      ],
+      "notes": "The README links doc/exl3.md, which does not exist at v1.5.0. TensorRT-LLM (latest stable tag v1.2.1; 1.3.0 still at rc26) was not researched, because the brief allowed one NVIDIA-only engine and ExLlamaV3 verified cleanly."
+    }
+  ]
+}
