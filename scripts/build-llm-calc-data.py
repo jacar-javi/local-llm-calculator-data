@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Generate the data block of the local LLM calculator from verified JSON.
 
-Sources (verified against primary sources on 2026-09-15, every value with its URL):
+Sources (platforms and engines verified on 2026-09-15; models, decision and voice models on
+2026-11-12; every value with its URL):
   data/models.json           model architectures (config.json, HF API)
   data/hardware.json         platforms + llama.cpp speed calibration (dense models)
   data/moe-calibration.json  speed calibration on MoE models
   data/engines.json          engines pinned to a release tag
   data/colibri.json          Colibri expert-streaming catalogue
+  data/decision-models.json  decision models (LLM-shaped) + runtimes
+  data/tts-models.json       voice models: published memory and speed
 
 Output: replaces everything between `/* DATA:BEGIN */` and `/* DATA:END */` in
 calculator/llm-calculator.js.
@@ -30,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 JS = ROOT / "calculator" / "llm-calculator.js"
-VERIFIED = "2026-09-15"
+VERIFIED = "2026-11-12"
 
 
 def yes(v) -> bool:
@@ -294,6 +297,122 @@ def build_models(raw: list) -> list[dict]:
     return out
 
 
+# ----------------------------------------------------------- decision models
+# Decision models (docs/marketing/llm-calculator-data/decision-models.json) are LLM-shaped,
+# so memory uses the same weights + KV formula. What differs is the RUNTIME: most of them
+# need a decision head or a read-out that a plain chat engine does not run. Per engine:
+#   "yes"    the engine runs the model as a decision model
+#   "helper" stock engine plus the model's own helper script (shim)
+#   "no"     not supported, or it loads the backbone but the answer is meaningless
+#   None     not documented
+# Read from each model's runtimes in decision-models.json (2026-11-12): llama.cpp decision
+# support is /v1/systemone (PR #29818, 2026-10-02) and the clef arch (PR #29831, 2026-10-03).
+_ALL_NO = {"llamacpp": "no", "ollama": "no", "lmstudio": "no", "vllm": "no", "sglang": "no",
+           "mlx-lm": "no", "omlx": "no", "exllamav3": "no"}
+DECISION_RUNTIMES = {
+    "clef-27b": dict(_ALL_NO, llamacpp="yes", ollama="yes", sglang="yes", **{"mlx-lm": "helper"}),
+    "clef-flash-9b": dict(_ALL_NO, llamacpp="yes", ollama="yes", sglang="yes", vllm="yes", **{"mlx-lm": "helper"}),
+    "clef-omni-30b-a3b": dict(_ALL_NO, vllm="yes"),
+    "openjev-27b": dict(_ALL_NO, llamacpp="yes", vllm="helper", lmstudio=None, sglang=None, omlx=None,
+                        exllamav3=None, **{"mlx-lm": "helper"}),
+    "openjev-flash-9b": dict(_ALL_NO, llamacpp="yes", vllm="helper", lmstudio=None, sglang=None, omlx=None,
+                             exllamav3=None, **{"mlx-lm": "helper"}),
+    "d3": dict(_ALL_NO, llamacpp="yes", ollama="yes", vllm="yes", sglang=None),
+    "d3-flash": dict(_ALL_NO, llamacpp="yes", ollama="yes", vllm="yes", sglang=None),
+    "d3-mini": dict(_ALL_NO, llamacpp="yes", ollama="yes", vllm="yes", sglang=None),
+    "pplx-decider-v1.2": dict(_ALL_NO, llamacpp="yes", sglang=None),
+    "pplx-decider-flash-v1.2": dict(_ALL_NO, llamacpp="yes", sglang=None),
+    "kev-27b": dict(_ALL_NO, llamacpp=None, **{"mlx-lm": None}),
+    "nimble-v4-max-27b": dict(_ALL_NO),
+    "h2o-lightning-4b": dict(_ALL_NO, llamacpp="yes", vllm="helper", lmstudio=None, sglang=None, omlx=None,
+                             exllamav3=None, **{"mlx-lm": None}),
+    "liquid-d1-3b": dict(_ALL_NO, llamacpp="yes", vllm="yes"),
+}
+# Decision head parameters that the HF safetensors total leaves out (Clef ships it apart).
+DECISION_HEAD_B = {"clef-27b": 0.13, "clef-flash-9b": 0.12}
+# Published speed, translated. (hardware es/en, figure es/en, source). Single request unless stated.
+DECISION_REFS = {
+    "clef-27b": [
+        ("Workers AI (SGLang)", "Workers AI (SGLang)", "152 ms con ≈800 tokens, 305 ms con ≈3.400, 1,6 s con ≈16.000",
+         "152 ms at ≈800 tokens, 305 ms at ≈3,400, 1.6 s at ≈16,000", "https://blog.cloudflare.com/clef-faster-cheaper-multimodal"),
+        ("Apple M5 Max, MLX 4 bits", "Apple M5 Max, MLX 4-bit", "1,4 s con 1.000 tokens, 26 s con 16.000",
+         "1.4 s at 1,000 tokens, 26 s at 16,000", "https://huggingface.co/mlx-community/clef-flash-4bit"),
+    ],
+    "clef-flash-9b": [
+        ("Workers AI", "Workers AI", "mediana 39 ms por petición", "median 39 ms per request",
+         "https://developers.cloudflare.com/changelog/post/2026-10-01-clef-workers-ai/"),
+        ("Apple M5 Max, MLX 4 bits", "Apple M5 Max, MLX 4-bit", "0,31 s con 1.000 tokens, 7 s con 16.000",
+         "0.31 s at 1,000 tokens, 7 s at 16,000", "https://huggingface.co/mlx-community/clef-flash-4bit"),
+    ],
+    "clef-omni-30b-a3b": [
+        ("Workers AI", "Workers AI", "texto ≈130 ms, imagen ≈150 ms, vídeo de 21 s ≈1,5 s",
+         "text ≈130 ms, image ≈150 ms, 21-s video ≈1.5 s", "https://blog.cloudflare.com/clef-faster-cheaper-multimodal"),
+    ],
+    "openjev-27b": [
+        ("1 × H100, FP8, vLLM", "1 × H100, FP8, vLLM", "227 ms con 1.100 tokens, 923 ms con 8.100, 1,76 s con 15.100",
+         "227 ms at 1,100 tokens, 923 ms at 8,100, 1.76 s at 15,100", "https://huggingface.co/openjev/openjev"),
+        ("Apple M5 Max, MLX 8 bits", "Apple M5 Max, MLX 8-bit", "≈0,3 s por decisión corta", "≈0.3 s per short decision",
+         "https://huggingface.co/openjev/openjev-MLX"),
+    ],
+    "openjev-flash-9b": [
+        ("1 × H100, FP8", "1 × H100, FP8", "40 ms por decisión", "40 ms per decision", "https://huggingface.co/openjev/OpenJev-Flash-9B"),
+    ],
+    "d3": [
+        ("1 × AMD MI325X", "1 × AMD MI325X", "54 ms una pregunta; 4,2 s con 32.000 tokens; 27 peticiones/s en lote",
+         "54 ms one question; 4.2 s at 32,000 tokens; 27 requests/s batched", "https://huggingface.co/vllm-sr/d3"),
+    ],
+    "d3-flash": [
+        ("1 × AMD MI325X", "1 × AMD MI325X", "19 ms una pregunta; 1,4 s con 32.000 tokens; 95 peticiones/s en lote",
+         "19 ms one question; 1.4 s at 32,000 tokens; 95 requests/s batched", "https://huggingface.co/vllm-sr/d3-flash"),
+    ],
+    "d3-mini": [
+        ("1 × AMD MI325X", "1 × AMD MI325X", "18 ms una pregunta; 1,1 s con 32.000 tokens; 151 peticiones/s en lote",
+         "18 ms one question; 1.1 s at 32,000 tokens; 151 requests/s batched", "https://huggingface.co/vllm-sr/d3-mini"),
+    ],
+    "pplx-decider-v1.2": [
+        ("1 × NVIDIA GB200", "1 × NVIDIA GB200", "96 ms una petición pequeña; 19,8 peticiones/s de ≈1.050 tokens",
+         "96 ms one small request; 19.8 requests/s at ≈1,050 tokens", "https://huggingface.co/perplexity-ai/pplx-decider-v1.2"),
+    ],
+    "kev-27b": [
+        ("1 × H200", "1 × H200", "9,4 s con 64.000 tokens nuevos (733 ms en caché); 21 peticiones/s",
+         "9.4 s at 64,000 new tokens (733 ms cached); 21 requests/s", "https://huggingface.co/jaredpalmer/kev-27b"),
+    ],
+    "h2o-lightning-4b": [
+        ("1 × H100", "1 × H100", "21 ms una pregunta (p50); 43 peticiones/s", "21 ms one question (p50); 43 requests/s",
+         "https://huggingface.co/h2oai/h2o-lightning-4b"),
+        ("1 × L40S", "1 × L40S", "28 ms con 100-300 tokens, 69 ms con 800-1.200", "28 ms at 100-300 tokens, 69 ms at 800-1,200",
+         "https://huggingface.co/h2oai/h2o-lightning-4b"),
+    ],
+    "liquid-d1-3b": [
+        ("RTX 4090", "RTX 4090", "8 ms una pregunta; 102 ms con 3.400 tokens", "8 ms one question; 102 ms at 3,400 tokens",
+         "https://huggingface.co/LiquidAI/d1-3B"),
+        ("Apple M5 Pro (PyTorch mps)", "Apple M5 Pro (PyTorch mps)", "30 ms una pregunta; 640 ms con 3.400 tokens",
+         "30 ms one question; 640 ms at 3,400 tokens", "https://huggingface.co/LiquidAI/d1-3B"),
+    ],
+}
+
+
+def build_decision_models(raw: dict) -> list[dict]:
+    out = build_models(raw["models"])
+    by_id = {m["id"]: m for m in raw["models"]}
+    for m in out:
+        src = by_id[m["id"]]
+        if m["id"] not in DECISION_RUNTIMES:
+            raise SystemExit(f"decision model {m['id']} has no DECISION_RUNTIMES row")
+        m["params"] = round(m["params"] + DECISION_HEAD_B.get(m["id"], 0), 2)
+        if not m["moe"]:
+            m["active"] = m["params"]
+        # LFM Open License v1.0 allows commercial use below USD 10M revenue: conditional, not "no".
+        commercial = None if m["id"] == "liquid-d1-3b" else src["decision"].get("license_commercial")
+        m["decision"] = {
+            "runtimes": DECISION_RUNTIMES[m["id"]],
+            "license": src["license"], "commercial": commercial if isinstance(commercial, bool) else None,
+            "refs": [{"hw": {"es": r[0], "en": r[1]}, "fig": {"es": r[2], "en": r[3]}, "source": r[4]}
+                     for r in DECISION_REFS.get(m["id"], [])],
+        }
+    return out
+
+
 def build_calibration(raw: dict) -> dict:
     subs = raw["calibration"]["k_subsets"]["gpu_all_backends_by_ceiling_band"]
     bands = []
@@ -378,8 +497,153 @@ def build_colibri(raw: dict) -> tuple[dict, dict]:
     return colibri, engine
 
 
+# ---------------------------------------------------------------- voice (TTS)
+# Text-to-speech does not fit the weights + KV + decode model (codec models, vocoders,
+# flow matching), so it gets its own panel built from data/
+# tts-models.json (2026-11-12). The facts come from that file; what follows is editorial:
+#   TTS_SPANISH  how Spanish is supported: yes (official) | variant (only a separate
+#                checkpoint or finetune) | experimental | no, with a short bilingual note
+#   TTS_MEM      the memory figures the authors or the community PUBLISH, as numbers, per
+#                platform kind; the browser picks the smallest one that applies. A model
+#                without one is estimated as its 16-bit weights and labelled as a minimum.
+#   TTS_COMMERCIAL_NOTE  licences whose commercial use depends on conditions
+TTS_SPANISH = {
+    "kokoro-82m": ("yes", "3 voces oficiales; el autor avisa de que fuera del inglés la calidad puede ser escasa.",
+                   "3 official voices; the author warns that quality outside English may be thin."),
+    "piper": ("yes", "Voces nativas de España (davefx, sharvard), México y Argentina.", "Native voices from Spain (davefx, sharvard), Mexico and Argentina."),
+    "melotts": ("yes", "Modelo español oficial de una sola voz.", "Official single-voice Spanish model."),
+    "supertonic-3": ("yes", "Oficial; WER en español 1,13 según el proyecto.", "Official; Spanish WER 1.13 per the project."),
+    "kitten-tts-2": ("yes", "Voces en español integradas o clonación; desactiva la normalización inglesa (normalize=False).",
+                     "Built-in Spanish voices or cloning; turn off the English normaliser (normalize=False)."),
+    "parler-tts-mini-multilingual-v1.1": ("yes", "Oficial; entrenado con audiolibros en español.", "Official; trained on Spanish audiobooks."),
+    "omnivoice": ("yes", "Oficial (27.500 h de español); el acento sigue a la voz de referencia.", "Official (27,500 h of Spanish); the accent follows the reference voice."),
+    "neutts-air": ("no", "Solo inglés.", "English only."),
+    "neutts-nano": ("variant", "Solo con el modelo aparte neutts-nano-spanish.", "Only through the separate neutts-nano-spanish model."),
+    "moss-tts-nano-100m": ("yes", "Oficial; sin cifras de calidad en español.", "Official; no Spanish quality figures."),
+    "orpheus-3b": ("variant", "Solo con el modelo beta de investigación español-italiano.", "Only through the Spanish-Italian research beta checkpoint."),
+    "sesame-csm-1b": ("no", "Solo inglés.", "English only."),
+    "dia-1.6b": ("no", "Solo inglés.", "English only."),
+    "dia2-2b": ("no", "Solo inglés.", "English only."),
+    "spark-tts-0.5b": ("no", "Solo chino e inglés.", "Chinese and English only."),
+    "llasa-3b": ("no", "Solo chino e inglés (el español está en otro modelo, Llasa-1B-Multilingual).",
+                 "Chinese and English only (Spanish is in a different model, Llasa-1B-Multilingual)."),
+    "zonos-v0.1": ("experimental", "No oficial: hubo español en el entrenamiento, pero no está en la lista de idiomas.",
+                   "Unofficial: Spanish was in the training data but is not in the language list."),
+    "zonos3-mini": ("yes", "Oficial, con normalización de números y fechas; voces Rodrigo y Ximena.",
+                    "Official, with number and date normalisation; voices Rodrigo and Ximena."),
+    "kyutai-tts-1.6b-en-fr": ("no", "Solo inglés y francés.", "English and French only."),
+    "xtts-v2": ("yes", "Oficial; el acento sigue al clip de referencia.", "Official; the accent follows the reference clip."),
+    "chatterbox-multilingual-v3": ("yes", "Oficial, y además modelos afinados para español de España (es-ES) y de México.",
+                                   "Official, plus finetunes for Spain Spanish (es-ES) and Mexican Spanish."),
+    "f5-tts-v1-base": ("variant", "Solo con el ajuste fino de la comunidad F5-Spanish (sobre todo acento peninsular).",
+                       "Only through the community F5-Spanish finetune (mostly Peninsular accent)."),
+    "openaudio-s1-mini": ("yes", "Listado como soportado, sin datos de calidad.", "Listed as supported, no quality data."),
+    "fish-audio-s2-pro": ("yes", "Nivel 2 de calidad (el 1 es japonés, inglés y chino).", "Quality tier 2 (tier 1 is Japanese, English and Chinese)."),
+    "fish-audio-drama-3": ("yes", "Oficial; WER en español 0,96 según el informe técnico.", "Official; Spanish WER 0.96 per the technical report."),
+    "indextts-2": ("no", "Sin español (llegó con la 2.5).", "No Spanish (it arrived in 2.5)."),
+    "indextts-2-5": ("yes", "Oficial desde la 2.5; WER en español 3,75.", "Official since 2.5; Spanish WER 3.75."),
+    "fun-cosyvoice3-0-5b": ("yes", "Uno de sus 9 idiomas oficiales; WER en español 4,04.", "One of its 9 official languages; Spanish WER 4.04."),
+    "megatts3": ("no", "Solo chino e inglés.", "Chinese and English only."),
+    "qwen3-tts-12hz-1.7b": ("yes", "Oficial, pero ninguna voz predefinida es nativa: clona o diseña una voz española.",
+                            "Official, but no preset voice is native: clone or design a Spanish voice."),
+    "qwen3-tts-12hz-0.6b": ("yes", "Oficial; menos preciso que el 1.7B y sin voz nativa predefinida.", "Official; less accurate than the 1.7B and no native preset voice."),
+    "voxtral-4b-tts-2603": ("yes", "Voces predefinidas es_male y es_female; WER independiente 3,91, peor que Qwen3-TTS o VoxCPM2.",
+                            "Preset voices es_male and es_female; independent WER 3.91, behind Qwen3-TTS or VoxCPM2."),
+    "voxcpm2": ("yes", "Oficial; WER en español 2,0 en el Open TTS Leaderboard.", "Official; Spanish WER 2.0 on the Open TTS Leaderboard."),
+    "vibevoice-realtime-0.5b": ("experimental", "Experimental; WER en español 7,37 en el Open TTS Leaderboard.", "Experimental; Spanish WER 7.37 on the Open TTS Leaderboard."),
+    "vibevoice-1.5b": ("no", "Solo inglés y chino.", "English and Chinese only."),
+    "higgs-tts-3-4b": ("yes", "Calidad de producción con voz de referencia: WER 1,5 clonando y 10,2 sin ella.",
+                       "Production quality with a reference voice: WER 1.5 when cloning, 10.2 without."),
+    "higgs-tts-2-3b-base": ("experimental", "No oficial (solo lo anuncia mlx-audio).", "Unofficial (only mlx-audio lists it)."),
+    "moss-tts-v1.5": ("yes", "Oficial; indica language=\"Spanish\".", "Official; set language=\"Spanish\"."),
+    "magpie-tts-multilingual-357m": ("yes", "Oficial, pero las voces predefinidas son inglesas.", "Official, but the preset voices are English."),
+}
+# (GB, platform kinds or None for any, condition es, condition en). GiB figures are kept as published.
+TTS_MEM = {
+    "supertonic-3": [(2.0, None, "pico en CPU", "peak on CPU")],
+    "kitten-tts-2": [(5.5, ["discrete"], "pico en una GTX 1660 Ti, float16 + 4 bits", "peak on a GTX 1660 Ti, float16 + 4-bit"),
+                     (6.0, ["cpu", "unified"], "≈6 GB de RAM en CPU, según el proyecto", "≈6 GB of RAM on CPU, per the project")],
+    "omnivoice": [(5.0, ["discrete"], "pico en una A100 (medido por Supertone)", "peak on an A100 (measured by Supertone)"),
+                  (8.3, ["cpu", "unified"], "pico en CPU (medido por Supertone)", "peak on CPU (measured by Supertone)")],
+    "dia-1.6b": [(4.4, None, "bfloat16 en una RTX 4090", "bfloat16 on an RTX 4090")],
+    "dia2-2b": [(3.9, ["discrete"], "GGUF Q4_0 con audio.cpp, RX 9070 (comunidad)", "GGUF Q4_0 with audio.cpp, RX 9070 (community)")],
+    "zonos-v0.1": [(6.0, None, "requisito del proyecto", "project requirement")],
+    "fish-audio-s2-pro": [(4.0, None, "GGUF Q4_K_M con s2.cpp (guía de la comunidad)", "GGUF Q4_K_M with s2.cpp (community guide)"),
+                          (24.0, None, "PyTorch, documentación oficial", "PyTorch, official docs")],
+    "fish-audio-drama-3": [(26.0, ["unified"], "MLX 4 bits en Apple Silicon, pico (comunidad)", "MLX 4-bit on Apple Silicon, peak (community)"),
+                           (48.0, ["discrete"], "FP8, documentación oficial", "FP8, official docs")],
+    "indextts-2-5": [(6.0, ["discrete"], "GPU NVIDIA, según la ficha oficial", "NVIDIA GPU, per the official card")],
+    "voxtral-4b-tts-2603": [(16.0, ["discrete", "unified"], "BF16 en una GPU con vLLM-Omni", "BF16 on one GPU with vLLM-Omni"),
+                            (8.0, ["cpu", "unified"], "GGUF Q4_K en CPU: cabe en 8 GB de RAM", "GGUF Q4_K on CPU: fits in 8 GB of RAM")],
+    "voxcpm2": [(8.0, None, "bf16 con PyTorch, ficha oficial", "bf16 with PyTorch, official card")],
+    "higgs-tts-3-4b": [(6.0, ["discrete"], "GGUF Q8 con audio.cpp, pico", "GGUF Q8 with audio.cpp, peak"),
+                       (8.6, ["unified"], "bf16 en un Apple M5 Pro, pico", "bf16 on an Apple M5 Pro, peak")],
+    "moss-tts-v1.5": [(7.3, ["discrete"], "GGUF Q4_K con audio.cpp, RTX 3090 (comunidad)", "GGUF Q4_K with audio.cpp, RTX 3090 (community)")],
+}
+TTS_COMMERCIAL_NOTE = {
+    "piper": ("Motor GPL-3; cada voz lleva la licencia de sus datos: davefx, sharvard y carlfm (es_ES) son aptas para uso comercial.",
+              "GPL-3 engine; each voice carries its dataset licence: davefx, sharvard and carlfm (es_ES) are cleared for commercial use."),
+    "supertonic-3": ("OpenRAIL-M: comercial con restricciones de uso.", "OpenRAIL-M: commercial with use restrictions."),
+    "kitten-tts-2": ("Gratis por debajo de 1 M USD de ingresos o financiación.", "Free below USD 1M of revenue or funding."),
+    "neutts-nano": ("Licencia de acceso restringido: no se ha podido leer si permite uso comercial.", "Gated licence: whether it allows commercial use could not be read."),
+    "fish-audio-drama-3": ("Por debajo de 500.000 USD de ingresos al año y sin ofrecer una API de TTS.", "Below USD 500k of yearly revenue and without offering a TTS API."),
+    "indextts-2": ("Licencia aparte por encima de 100 M de usuarios al mes.", "Separate licence above 100M monthly users."),
+    "indextts-2-5": ("Licencia aparte por encima de 100 M de usuarios al mes.", "Separate licence above 100M monthly users."),
+    "vibevoice-realtime-0.5b": ("MIT, pero Microsoft dice que es solo para investigación.", "MIT, but Microsoft says it is for research only."),
+    "vibevoice-1.5b": ("MIT, pero Microsoft dice que es solo para investigación.", "MIT, but Microsoft says it is for research only."),
+    "higgs-tts-3-4b": ("No comercial, salvo contenido monetizado de creadores con atribución.", "Non-commercial, except monetised creator content with attribution."),
+    "higgs-tts-2-3b-base": ("Comercial por debajo de 100.000 usuarios activos al año.", "Commercial below 100k yearly active users."),
+}
+# Commercial use that depends on conditions: neither a clean yes nor a clean no.
+TTS_CONDITIONAL = {"piper", "supertonic-3", "kitten-tts-2", "fish-audio-drama-3", "vibevoice-realtime-0.5b",
+                   "vibevoice-1.5b", "higgs-tts-2-3b-base"}
+TTS_BACKEND = {"CUDA": "CUDA", "ROCm": "ROCm", "Metal/MPS": "Metal", "CPU": "CPU", "other: Vulkan": "Vulkan",
+               "WebGPU": "WebGPU", "WASM": "WASM"}
+TTS_BY = {"project": ("proyecto", "project"), "community": ("comunidad", "community"), "paper": ("artículo", "paper")}
+
+
+def build_tts(raw: dict) -> list[dict]:
+    out = []
+    for m in raw["models"]:
+        mid = m["id"]
+        if mid not in TTS_SPANISH:
+            raise SystemExit(f"TTS model {mid} has no TTS_SPANISH row")
+        sp = TTS_SPANISH[mid]
+        backends = sorted({TTS_BACKEND[b] for r in m["runtimes"] for b in (r.get("backends") or []) if b in TTS_BACKEND})
+        params = m["params_b"]
+        if params:
+            est = params * 1e9 * 2 / 1073741824
+        else:  # Piper: no parameter count published; the largest Spanish voice file stands in
+            est = max(w["gb"] for w in m["weights_gb"] if w.get("gb"))
+        com = m["license_commercial"]
+        if mid in TTS_CONDITIONAL:
+            com = "conditions"
+        cn = TTS_COMMERCIAL_NOTE.get(mid)
+        speeds = [{"hw": None if re.search(r"not named|unspecified|not stated", s["hardware"] or "not named", re.I) else s["hardware"], "runtime": s.get("runtime"), "metric": s["metric"], "value": s["value"],
+                   "platform": s.get("platform_id"), "by": {"es": TTS_BY.get(s.get("by"), (s.get("by"), s.get("by")))[0],
+                                                             "en": TTS_BY.get(s.get("by"), (s.get("by"), s.get("by")))[1]},
+                   "source": s["source"]}
+                  for s in (m.get("speed_published") or []) if isinstance(s.get("value"), (int, float))]
+        out.append({
+            # The research names carry English asides in parentheses ("(+ community Spanish
+            # finetune)"); the Spanish note says the same in both languages, so drop them.
+            "id": mid, "name": m["name"].split(" (")[0], "vendor": m["vendor"], "repo": m["repo"], "params": params,
+            "released": m["released"], "license": m["license"].split(";")[0].split(" (")[0],
+            "commercial": com, "commercialNote": {"es": cn[0], "en": cn[1]} if cn else None,
+            "spanish": sp[0], "spanishNote": {"es": sp[1], "en": sp[2]},
+            "cloning": bool(m["voice_cloning"]["supported"]), "streaming": m["streaming"]["supported"],
+            "sampleRate": m.get("sample_rate_hz"),
+            "runtimes": sorted({r["name"].split(" (")[0] for r in m["runtimes"] if r["name"] != "other"}),
+            "backends": backends,
+            "mem": [{"gb": g, "kinds": k, "cond": {"es": ce, "en": cen}} for g, k, ce, cen in TTS_MEM.get(mid, [])],
+            "estGB": round(est, 2), "speeds": speeds,
+        })
+    return out
+
+
 def render() -> str:
     models = build_models(json.loads((DATA / "models.json").read_text()))
+    models += build_decision_models(json.loads((DATA / "decision-models.json").read_text()))
     hardware = json.loads((DATA / "hardware.json").read_text())
     engines = build_engines(json.loads((DATA / "engines.json").read_text()))
     colibri, coli_engine = build_colibri(json.loads((DATA / "colibri.json").read_text()))
@@ -393,6 +657,7 @@ def render() -> str:
             f"  var ENGINES = {dump(engines)};\n"
             f"  var CALIBRATION = {dump(build_calibration(hardware))};\n"
             f"  var COLIBRI = {dump(colibri)};\n"
+            f"  var TTS = {dump(build_tts(json.loads((DATA / 'tts-models.json').read_text())))};\n"
             "  /* DATA:END */")
 
 

@@ -245,9 +245,42 @@ if (calc.MODELS.length) {
   approx('data: vLLM utilization default 0.92', E('vllm').policy.fraction, 0.92, 0);
   approx('data: GGUF Q4_K_M 4.8944 bpw', E('llamacpp').formats.find(f => f.id === 'gguf-q4_k_m').bpw, 4.8944, 0);
   approx('data: RTX 4090 bandwidth 1008 GB/s', P('rtx4090').bandwidth, 1008, 0);
-  // Every model runs somewhere with llama.cpp (it supports every attention kind here).
-  assert('data: llama.cpp supports every model on a 4090',
-    calc.MODELS.every(m => calc.compatibility(E('llamacpp'), P('rtx4090'), m).length === 0));
+  // Every chat model runs somewhere with llama.cpp (it supports every attention kind here).
+  assert('data: llama.cpp supports every chat model on a 4090',
+    calc.MODELS.filter(m => !m.decision).every(m => calc.compatibility(E('llamacpp'), P('rtx4090'), m).length === 0));
+  // Decision models (2026-11-12): the engine must run the decision head or read-out.
+  const dm = calc.MODELS.filter(m => m.decision);
+  assert('data: 14 decision models', dm.length === 14);
+  assert('data: Clef runs on llama.cpp (arch clef, PR #29831)', calc.decisionSupport(E('llamacpp'), M('clef-27b')) === 'yes');
+  assert('data: Clef 27B is not in vLLM (only clef-flash and clef-omni are)',
+    calc.compatibility(E('vllm'), P('rtx4090'), M('clef-27b')).indexOf('decision') !== -1 &&
+    calc.compatibility(E('vllm'), P('rtx4090'), M('clef-flash-9b')).length === 0);
+  assert('data: LM Studio gives meaningless Clef output', calc.decisionSupport(E('lmstudio'), M('clef-27b')) === 'no');
+  assert('data: OpenJev on vLLM needs its helper shim', calc.decisionSupport(E('vllm'), M('openjev-27b')) === 'helper');
+  assert('data: OpenJev is non-commercial (CC BY-NC 4.0)', M('openjev-27b').decision.commercial === false);
+  // Clef ships its 0.13B joint head apart from the backbone safetensors total.
+  approx('data: Clef params = 27.36 backbone + 0.13 head', M('clef-27b').params, 27.49, 1e-9);
+  // Same backbone as Qwen3.8-27B, so the same KV per token.
+  approx('data: Clef KV = Qwen3.8-27B KV', M('clef-27b').kvElemFull, M('qwen38-27b').kvElemFull, 0);
+  assert('data: chat models carry no decision block', !M('qwen38-27b').decision);
+  // Voice (TTS), 2026-11-12: published memory wins over the 16-bit estimate, per platform kind.
+  const T = id => calc.TTS.find(m => m.id === id);
+  assert('data: 39 TTS models', calc.TTS.length === 39);
+  let tf = calc.ttsFit(T('dia-1.6b'), P('rtx4090'));
+  assert('tts: Dia on a 4090 uses the published 4.4 GB and fits', !tf.estimated && tf.needGB === 4.4 && tf.fits === true && tf.runsOn === 'gpu');
+  // Kokoro has no published memory: 0.082B x 2 B = 0.164e9 B = 0.15 GiB estimate.
+  tf = calc.ttsFit(T('kokoro-82m'), P('rtx4090'));
+  assert('tts: Kokoro is a flagged 16-bit estimate', tf.estimated && Math.abs(tf.needGB - 0.15) < 0.01);
+  // Drama 3: 48 GB FP8 on a discrete card (does not fit 24 GB), 26 GB MLX 4-bit on a Mac.
+  tf = calc.ttsFit(T('fish-audio-drama-3'), P('rtx4090'));
+  assert('tts: Drama 3 needs 48 GB on a discrete GPU', tf.needGB === 48 && tf.fits === false);
+  const mac = calc.PLATFORMS.find(p => p.kind === 'unified' && p.vendor === 'Apple' && p.memGiB === 64);
+  tf = calc.ttsFit(T('fish-audio-drama-3'), mac);
+  assert('tts: Drama 3 uses the 26 GB MLX figure on a 64 GB Mac and fits', tf.needGB === 26 && tf.fits === true);
+  // VibeVoice Realtime publishes only CUDA: no runtime on a Mac.
+  assert('tts: CUDA-only VibeVoice Realtime has no runtime on a Mac', calc.ttsFit(T('vibevoice-realtime-0.5b'), mac).runsOn === null);
+  assert('tts: every model has a Spanish class', calc.TTS.every(m => ['yes', 'variant', 'experimental', 'no'].indexOf(m.spanish) !== -1));
+  assert('tts: Voxtral is non-commercial (CC BY-NC)', T('voxtral-4b-tts-2603').commercial === false);
   // vLLM has no Metal backend (only a community plugin), so it must not "fit" a Mac via CPU.
   assert('data: vLLM is incompatible with an Apple Silicon Mac',
     calc.compatibility(E('vllm'), P('m4max-40c-128'), M('qwen3-8b')).indexOf('backend') !== -1);

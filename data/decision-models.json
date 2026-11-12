@@ -1,0 +1,1443 @@
+{
+  "verified": "2026-11-12",
+  "models": [
+    {
+      "id": "clef-27b",
+      "name": "Cloudflare Clef",
+      "family": "Clef",
+      "vendor": "Cloudflare",
+      "repo": "Cloudflare/clef",
+      "mirror_used": null,
+      "params_b": 27.36,
+      "active_params_b": 27.36,
+      "moe": false,
+      "layers": 64,
+      "hidden": 5120,
+      "heads": 24,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 16,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 48,
+      "fixed_state_elements": 39223296,
+      "max_context": 16384,
+      "max_context_extended": 65536,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-01",
+      "released_source": "blog (Cloudflare changelog 2026-10-01; HF createdAt 2026-09-30)",
+      "kv_elements_per_token_full": 32768,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes for every architecture field: same as qwen38-27b (64 layers, 48 Gated DeltaNet + 16 full, 4 KV heads x 256). Only differences: mtp_num_hidden_layers 0 (MTP layer dropped), dtype/transformers_version, vision model_type string.",
+      "sources": [
+        "https://huggingface.co/Cloudflare/clef/resolve/main/config.json",
+        "https://huggingface.co/api/models/Cloudflare/clef",
+        "https://huggingface.co/Cloudflare/clef",
+        "https://huggingface.co/Cloudflare/clef/resolve/main/joint_head_config.json",
+        "https://huggingface.co/api/models/Cloudflare/clef/tree/main",
+        "https://developers.cloudflare.com/changelog/post/2026-10-01-clef-workers-ai/",
+        "https://blog.cloudflare.com/clef-decision-models",
+        "https://blog.cloudflare.com/clef-faster-cheaper-multimodal",
+        "https://developers.cloudflare.com/workers-ai/models/clef/"
+      ],
+      "notes": "Backbone = Qwen3.8-27B incl. vision tower; KV formula identical to qwen38-27b. HF safetensors.total 27,356,728,560 = qwen38-27b total minus the MTP layer; the separate joint_head.safetensors (0.256 GB bf16, ~0.13B params: width 1024, 2 routing + 4 layers, 16 heads, ffn 4096) is NOT in that total. Add ~0.26 GB for the head. Context: reference code default max_length 16,384 (mlx-community card: \"the head was trained at 16k\"); Workers AI serves 65,536 (model page, blog). Ollama tags advertise 256K (config max_position_embeddings) but that is not a validated decision length.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.8-27B (base_model in card; \"post-trained from\")",
+        "output": "Not next-token logits: a separate \"joint schema head\" (small transformer) reads the backbone final hidden states, routes evidence to each question and scores all options of ALL questions jointly in one forward pass; one logit per option, softmax per question. Question types noul / choice / score. Multiple questions per call: yes, up to 64 per request on Workers AI; llama.cpp README: \"clef reads all the questions in one prompt and decides them jointly\" (unlike other decision models, where each question is answered independently).",
+        "typical_prompt_tokens": "Cloudflare speed table uses ~800, ~3,400 and ~16,000-token requests (blog clef-faster-cheaper-multimodal). No single typical figure published.",
+        "max_options": {
+          "value": 255,
+          "source": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone) (\"255 for ... clef\"); Cloudflare docs give no limit"
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors + joint_head (official)",
+            "repo": "Cloudflare/clef",
+            "size_gb": 55.0
+          },
+          {
+            "format": "GGUF BF16/Q8_0/Q4_K_M + mmproj (ggml-org, llama.cpp project)",
+            "repo": "ggml-org/Clef-GGUF",
+            "sizes_gb": {
+              "BF16": 54.07,
+              "Q8_0": 28.73,
+              "Q4_K_M": 19.54,
+              "mmproj-BF16": 0.93,
+              "mmproj-Q8_0": 0.63
+            }
+          },
+          {
+            "format": "GGUF Q2_K..Q8_0, bf16 (bartowski, community; decision head kept at Q8_0, no imatrix possible)",
+            "repo": "bartowski/Cloudflare_clef-GGUF",
+            "sizes_gb": {
+              "Q2_K": 11.71,
+              "Q3_K_M": 14.48,
+              "Q4_K_M": 17.65,
+              "Q5_K_M": 20.64,
+              "Q6_K": 23.34,
+              "Q8_0": 28.8,
+              "bf16": 54.07
+            }
+          },
+          {
+            "format": "MLX 4-bit / 8-bit (mlx-community, with clef_mlx.py)",
+            "repo": "mlx-community/clef-4bit, mlx-community/clef-8bit",
+            "sizes_gb": {
+              "4bit": 16.31,
+              "8bit": 29.78
+            }
+          },
+          {
+            "format": "Ollama library tags",
+            "repo": "ollama.com/library/clef",
+            "sizes_gb": {
+              "27b-q4_K_M": 20,
+              "27b-q8_0": null,
+              "27b-nvfp4 (MLX)": 18,
+              "27b-mxfp8 (MLX)": 31,
+              "27b-mlx-bf16": 55
+            }
+          }
+        ],
+        "runtimes": {
+          "transformers": "Yes, custom code: joint_schema_model.py (load_release_model, systemone()); tested torch 2.11 + transformers 5.10.2 on one H200 (card).",
+          "sglang": "Yes: Cloudflare serves Clef on SGLang; upstream in SGLang 0.5.22 (PR #42721); card gives docker lmsysorg/sglang:dev-clef with /v1/systemone (blog, card).",
+          "vllm": "Not listed: vLLM decision docs (2026-10-29 dev preview) list ClefFlashForJointSchema (clef-flash) and ClefOmniForJointSchema only, not the 27B.",
+          "llama_cpp": "Yes, native: arch \"clef\", PR #29831 merged 2026-10-03 (needs new llama_batch_ext decision-order API; single seq per batch; whole prompt must fit --ubatch-size). Text-only at merge; server README now lists clef among image-capable models. A server running clef serves only /v1/systemone (no text generation).",
+          "ollama": "Yes, local: Ollama >= 0.35.1 (library page \"clef\"), also :cloud tags.",
+          "mlx": "Only through mlx-community clef_mlx.py (runs backbone + joint head; one record per call, no batching). mlx_lm/mlx_vlm.generate and LM Studio load the backbone but output is meaningless (mlx-community card).",
+          "plain_chat_runtimes": "Not usable: needs the joint head; generic text generation gives meaningless output."
+        },
+        "benchmarks_claimed": "Cloudflare (card, Decision Index 0.2.1 internal run): BANKING77 94.2, CLINC150+OOS 97.4, RAGTruth hallucination F1 79.4, MMLU 90.3; leads 7 of 10 decision benchmarks per changelog. mlx-community reports Cloudflare full-suite index 57.07 for clef-flash (not Clef). JevBench: not published by Cloudflare.",
+        "throughput_published": [
+          {
+            "figure": "Median 209.3 ms, p95 238.6 ms per request across 43 Decision Index benchmarks",
+            "hardware": "Workers AI (GPU not stated)",
+            "source": "card + changelog"
+          },
+          {
+            "figure": "After SGLang move: ~800 tok 152 ms median; ~3,400 tok 305 ms; ~16,000 tok 1,635 ms (p95 1,805 ms)",
+            "hardware": "Workers AI; SGLang cookbook link points to H200",
+            "source": "https://blog.cloudflare.com/clef-faster-cheaper-multimodal",
+            "derived_prefill_tok_s": "~9,800 tok/s at 16k, ~11,100 at 3.4k (tokens / median latency, one request)"
+          },
+          {
+            "figure": "MLX 4-bit: 1.4 s at 1k tokens, 26.0 s at 16k; 8-bit: 1.5 s / 32.0 s; peak memory 4-bit 17.1/17.5/19.6 GB at 1k/4k/16k",
+            "hardware": "Apple M5 Max (text input)",
+            "source": "https://huggingface.co/mlx-community/clef-flash-4bit (variant table)",
+            "derived_prefill_tok_s": "~630 tok/s (4-bit, 16k), ~510 tok/s (8-bit)"
+          },
+          {
+            "figure": "Workers AI price $0.24 per M input tokens, output tokens free",
+            "hardware": null,
+            "source": "https://developers.cloudflare.com/workers-ai/models/clef/"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "clef-flash-9b",
+      "name": "Cloudflare Clef-flash",
+      "family": "Clef",
+      "vendor": "Cloudflare",
+      "repo": "Cloudflare/clef-flash",
+      "mirror_used": null,
+      "params_b": 9.41,
+      "active_params_b": 9.41,
+      "moe": false,
+      "layers": 32,
+      "hidden": 4096,
+      "heads": 16,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 8,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 24,
+      "fixed_state_elements": 13172736,
+      "max_context": 16384,
+      "max_context_extended": 262144,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-01",
+      "released_source": "blog (Cloudflare changelog 2026-10-01; HF createdAt 2026-09-30)",
+      "kv_elements_per_token_full": 16384,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes for every architecture field: same as qwen35-9b (32 layers, 24 Gated DeltaNet + 8 full, 4 KV heads x 256). Differences: mtp_num_hidden_layers 0, explicit partial_rotary_factor 0.25 and tie_word_embeddings false (base defaults), dtype strings.",
+      "sources": [
+        "https://huggingface.co/Cloudflare/clef-flash/resolve/main/config.json",
+        "https://huggingface.co/api/models/Cloudflare/clef-flash",
+        "https://huggingface.co/Cloudflare/clef-flash",
+        "https://huggingface.co/Cloudflare/clef-flash/resolve/main/joint_head_config.json",
+        "https://developers.cloudflare.com/changelog/post/2026-10-01-clef-workers-ai/",
+        "https://blog.cloudflare.com/clef-faster-cheaper-multimodal",
+        "https://docs.vllm.ai/en/latest/models/structured_decisions_models/",
+        "https://huggingface.co/mlx-community/clef-flash-4bit"
+      ],
+      "notes": "HF total 9,409,813,744 (= qwen35-9b minus its 0.24B MTP layer); joint_head.safetensors 0.244 GB (~0.12B params, hidden 4096 -> width 1024) not included. Context: reference default 16,384; Workers AI cut it to 24k (blog: \"24k, instead of 64k as previously advertised\"); blog says it was \"trained to support a 256k context window should you choose to self-host it\" (recorded as extended, unvalidated by us).",
+      "decision": {
+        "base_model": "Qwen/Qwen3.5-9B",
+        "output": "Same joint schema head as Clef: one logit per option for every question, all questions in one forward pass; up to 64 questions per request (Workers AI).",
+        "typical_prompt_tokens": null,
+        "typical_prompt_tokens_reason": "Not published for the flash variant.",
+        "max_options": {
+          "value": 255,
+          "source": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)"
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors + joint_head (official)",
+            "repo": "Cloudflare/clef-flash",
+            "size_gb": 19.08
+          },
+          {
+            "format": "GGUF (ggml-org)",
+            "repo": "ggml-org/Clef-Flash-GGUF",
+            "sizes_gb": null,
+            "note": "exists (gguf arch clef, 9,075,566,084 params), sizes not read"
+          },
+          {
+            "format": "GGUF Q2_K..Q8_0, bf16 (bartowski)",
+            "repo": "bartowski/Cloudflare_clef-flash-GGUF",
+            "sizes_gb": {
+              "Q2_K": 4.19,
+              "Q4_K_M": 6.04,
+              "Q5_K_M": 6.98,
+              "Q6_K": 7.83,
+              "Q8_0": 9.68,
+              "bf16": 18.16,
+              "mmproj-f16": 0.92
+            }
+          },
+          {
+            "format": "MLX 4-bit / 8-bit (mlx-community)",
+            "repo": "mlx-community/clef-flash-4bit, -8bit",
+            "sizes_gb": {
+              "4bit": 6.21,
+              "8bit": 10.69
+            }
+          },
+          {
+            "format": "NVFP4 (community)",
+            "repo": "alpha-x-ai/clef-flash-NVFP4",
+            "sizes_gb": null
+          },
+          {
+            "format": "Ollama library tags",
+            "repo": "ollama.com/library/clef-flash",
+            "sizes_gb": {
+              "9b (default)": "11-12",
+              "9b-q8_0": 11,
+              "9b-mxfp8 (MLX)": 12,
+              "9b-mlx-bf16": 19
+            }
+          }
+        ],
+        "runtimes": {
+          "transformers": "Yes, custom joint_schema_model.py (card).",
+          "sglang": "Yes (card, SGLang cookbook variant=flash).",
+          "vllm": "Yes: ClefFlashForJointSchema, served as a pooling model; state truncated to min(16,384, max_model_len) (vLLM docs, latest dev preview 2026-10-29).",
+          "llama_cpp": "Yes, arch clef (PR #29831; ggml-org/Clef-Flash-GGUF).",
+          "ollama": "Yes, >= 0.35.1.",
+          "mlx": "mlx-community clef_mlx.py only.",
+          "plain_chat_runtimes": "Not usable (needs joint head)."
+        },
+        "benchmarks_claimed": "Cloudflare card (Decision Index 0.2.1 internal): MMLU 91.8, WinoGrande 97.5, ContractNLI 84.3, RAGTruth F1 only 35.6. Full-suite index 57.07 (as cited by mlx-community). OpenJev Flash card: Clef-Flash 190/231 (82.3%) on JevBench public items (third party measurement).",
+        "throughput_published": [
+          {
+            "figure": "Median 38.8 ms, p95 122.4 ms per request (43 Decision Index benchmarks)",
+            "hardware": "Workers AI (GPU not stated)",
+            "source": "card + changelog"
+          },
+          {
+            "figure": "MLX 4-bit: 0.31 s at 1k tokens, 7.0 s at 16k; 8-bit 0.34 s / 7.7 s; peak 7.0/7.2/8.6 GB (4-bit, 1k/4k/16k)",
+            "hardware": "Apple M5 Max",
+            "source": "https://huggingface.co/mlx-community/clef-flash-4bit",
+            "derived_prefill_tok_s": "~2,300 tok/s (4-bit, 16k); ~2,100 (8-bit)"
+          },
+          {
+            "figure": "Workers AI price $0.038 per M input tokens (down from $0.09)",
+            "hardware": null,
+            "source": "https://blog.cloudflare.com/clef-faster-cheaper-multimodal"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "clef-omni-30b-a3b",
+      "name": "Cloudflare Clef-omni",
+      "family": "Clef",
+      "vendor": "Cloudflare",
+      "repo": "Cloudflare/clef-omni",
+      "mirror_used": null,
+      "params_b": 35.26,
+      "active_params_b": 3.3,
+      "moe": true,
+      "layers": 48,
+      "hidden": 2048,
+      "heads": 32,
+      "kv_heads": 4,
+      "head_dim": 128,
+      "kv_heads_full": 4,
+      "head_dim_full": 128,
+      "attention": "full",
+      "kv_layers_full": 48,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 0,
+      "fixed_state_elements": 0,
+      "max_context": 64000,
+      "max_context_extended": null,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-09",
+      "released_source": "hf_createdAt (blog clef-faster-cheaper-multimodal, date not read)",
+      "kv_elements_per_token_full": 49152,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: thinker text_config is byte-for-byte equal to Qwen/Qwen3-Omni-30B-A3B-Instruct (48 layers, hidden 2048, 32 heads, 4 KV heads x 128, 128 experts / 8 active, full attention, max_position_embeddings 65,536). Text stack matches the existing qwen3-30b entry.",
+      "sources": [
+        "https://huggingface.co/Cloudflare/clef-omni/resolve/main/config.json",
+        "https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct/resolve/main/config.json",
+        "https://huggingface.co/api/models/Cloudflare/clef-omni",
+        "https://huggingface.co/Cloudflare/clef-omni",
+        "https://blog.cloudflare.com/clef-faster-cheaper-multimodal",
+        "https://docs.vllm.ai/en/latest/models/structured_decisions_models/"
+      ],
+      "notes": "HF total 35,259,818,545 includes vision + audio encoders AND the unused talker/code2wav speech-output weights (card: included unchanged, not loaded by load_release_model). Active params taken from the qwen3-30b entry (3.3B, text). Card: backbone needs ~64 GB GPU memory in bf16. Blog: backbone frozen, LoRA-trained, merged weights shipped; joint_head 0.218 GB not in total. Default max_length 64,000.",
+      "decision": {
+        "base_model": "Qwen/Qwen3-Omni-30B-A3B-Instruct (thinker)",
+        "output": "Joint schema head over the thinker: one logit per option for every question, one forward pass; inputs text, images, audio, video.",
+        "typical_prompt_tokens": null,
+        "typical_prompt_tokens_reason": "Not published.",
+        "max_options": {
+          "value": null,
+          "reason": "Not stated by Cloudflare; llama.cpp README does not list clef-omni."
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors + joint_head (official only)",
+            "repo": "Cloudflare/clef-omni",
+            "size_gb": 70.76
+          }
+        ],
+        "runtimes": {
+          "transformers": "Yes, custom joint_schema_model.py (one H200).",
+          "sglang": "\"coming soon\" (card).",
+          "vllm": "Yes: ClefOmniForJointSchema; >64,000 tokens -> 400 (vLLM docs).",
+          "llama_cpp": "Not supported (not in server README model list; no GGUF found).",
+          "ollama": "No library entry found.",
+          "mlx": "None found."
+        },
+        "benchmarks_claimed": "Cloudflare card (Decision Index 0.2.1 internal): MMLU 92.7, BANKING77 94.8, CLINC150+OOS 97.7, RAGTruth F1 42.0.",
+        "throughput_published": [
+          {
+            "figure": "Text ~130 ms median, image ~150 ms, audio a few hundred ms, 21-s video with sound ~1.5 s",
+            "hardware": "Workers AI (not stated)",
+            "source": "https://blog.cloudflare.com/clef-faster-cheaper-multimodal"
+          },
+          {
+            "figure": "$0.15 per M input tokens on Workers AI",
+            "hardware": null,
+            "source": "same blog"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "openjev-27b",
+      "name": "OpenJev",
+      "family": "OpenJev",
+      "vendor": "OpenJev (loopai)",
+      "repo": "openjev/openjev",
+      "mirror_used": null,
+      "params_b": 27.36,
+      "active_params_b": 27.36,
+      "moe": false,
+      "layers": 64,
+      "hidden": 5120,
+      "heads": 24,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 16,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 48,
+      "fixed_state_elements": 39223296,
+      "max_context": 16384,
+      "max_context_extended": null,
+      "native_bits": 16,
+      "license": "CC-BY-NC-4.0",
+      "released": "2026-09-20",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 32768,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: every architecture field equals qwen38-27b (config even keeps mtp_num_hidden_layers 1, but the safetensors total shows the MTP weights are not shipped). Diffs: dtype, transformers_version, vision rope fields.",
+      "sources": [
+        "https://huggingface.co/openjev/openjev/resolve/main/config.json",
+        "https://huggingface.co/api/models/openjev/openjev",
+        "https://huggingface.co/openjev/openjev",
+        "https://huggingface.co/openjev/openjev-FP8",
+        "https://huggingface.co/openjev/openjev-MLX",
+        "https://huggingface.co/openjev/openjev-MLX-4bit",
+        "https://huggingface.co/openjev/openjev-GGUF",
+        "https://huggingface.co/ggml-org/OpenJev-GGUF",
+        "https://github.com/ggml-org/llama.cpp/pull/29818"
+      ],
+      "notes": "Plain causal LM (Qwen3_5ForConditionalGeneration), no extra head: the decision is read from next-token logits of option letters, so KV/compute = qwen38-27b exactly. HF total 27,356,728,560. Base model not named in the main card (only \"an Apache 2.0 open base model\"); config/total identical to Qwen3.8-27B, and the Flash card calls it \"OpenJev 27B\". Card limits: prompts up to 16,384 tokens, one image per request. Cached-page latency shows prefix caching matters a lot.",
+      "decision": {
+        "base_model": "Not named in card (NOTICE file); architecture and param count identical to Qwen/Qwen3.8-27B",
+        "output": "Options are lettered; the helper asks the server for ONE token and reads the logits of exactly those letters at the first output position, then applies fixed calibration (READOUT_T 0.85 etc.). One forward pass per question; several questions per API request (each its own pass, prefix-cached state). >52 options: groups of 52 then a final pass over winners.",
+        "typical_prompt_tokens": "~1,460 tokens for a web decision with ~23 options (card).",
+        "max_options": {
+          "value": 52,
+          "source": "card \"Request limits\"; llama.cpp README \"52 for openjev\""
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors",
+            "repo": "openjev/openjev",
+            "size_gb": 54.73,
+            "note": "served with --quantization fp8 on one 80 GB GPU"
+          },
+          {
+            "format": "FP8 e4m3 checkpoint",
+            "repo": "openjev/openjev-FP8",
+            "size_gb": 30.41
+          },
+          {
+            "format": "MLX 8-bit, text only",
+            "repo": "openjev/openjev-MLX",
+            "size_gb": 28.6
+          },
+          {
+            "format": "MLX 4-bit, text only",
+            "repo": "openjev/openjev-MLX-4bit",
+            "size_gb": 15.15
+          },
+          {
+            "format": "GGUF, text only (official)",
+            "repo": "openjev/openjev-GGUF",
+            "sizes_gb": {
+              "Q4_K_M": 16.55,
+              "Q5_K_M": 19.23,
+              "Q6_K": 22.08,
+              "Q8_0": 28.6
+            }
+          },
+          {
+            "format": "GGUF + mmproj (ggml-org)",
+            "repo": "ggml-org/OpenJev-GGUF",
+            "sizes_gb": {
+              "BF16": 53.81,
+              "Q8_0": 28.6,
+              "Q4_K_M": 19.4,
+              "mmproj-BF16": 0.93
+            }
+          }
+        ],
+        "runtimes": {
+          "vllm": "Yes, stock vLLM 0.29.0 + helper/shim.py (needs --max-logprobs 64, --served-model-name qwen, prefix caching); primary measured recipe. vLLM also has a generic NextTokenStrategy for Qwen3.5 on /v1/systemone.",
+          "llama_cpp": "Yes: native /v1/systemone since PR #29818 (merged 2026-10-02; vision too); or official GGUF via /completion n_probs (helper llama.cpp backend \"on the list\").",
+          "mlx": "Yes: mlx-lm 0.31.3 + helper/shim_mlx.py (text only).",
+          "ollama": "No library entry (ollama.com/library/openjev 404).",
+          "plain_chat_runtimes": "Works in principle (it is a normal LM: ask for the letter, max_tokens 4) but probabilities need top-k logprobs at position 1."
+        },
+        "benchmarks_claimed": "OpenJev card (own run): 84.0% on 10,000 text questions from 34 sources vs hosted Jev 85.4%, base 80.4%, Nimble 9B 75.7%; desktop next action 88.0%, web unseen sites 87.4%; MiniWoB 39/100 (= Jev). Option-shuffle flips 2.3%.",
+        "throughput_published": [
+          {
+            "figure": "First read median 227 ms @1.1k tokens, 477 @4.1k, 923 @8.1k, 1,433 @12.2k, 1,758 @15.1k; cached page + new question 118-257 ms",
+            "hardware": "1x H100, FP8, vLLM",
+            "source": "card speed table",
+            "derived_prefill_tok_s": "~8,600 tok/s at 15.1k; ~8,800 at 8.1k"
+          },
+          {
+            "figure": "~80 ms short text decision (3,347 sequential in ~4.5 min); web step ~210 ms (~1,460 tokens, 23 options); 7 req/s on distinct 1,200-token pages at concurrency 8; 100 questions on one 4.1k page in 3.9 s (39 ms avg)",
+            "hardware": "1x H100 FP8",
+            "source": "card"
+          },
+          {
+            "figure": "~0.3 s per short text decision (10,000 questions in 80 min, one at a time)",
+            "hardware": "Apple M5 Max, MLX 8-bit",
+            "source": "https://huggingface.co/openjev/openjev-MLX"
+          },
+          {
+            "figure": "65.7 ms per decision, 7.5 US cents per 1,000 decisions at $4.09/GPU-h",
+            "hardware": "1x H100 FP8",
+            "source": "https://huggingface.co/openjev/OpenJev-Flash-9B (comparison chart)"
+          }
+        ],
+        "license_commercial": false
+      }
+    },
+    {
+      "id": "openjev-flash-9b",
+      "name": "OpenJev Flash 9B",
+      "family": "OpenJev",
+      "vendor": "OpenJev (loopai)",
+      "repo": "openjev/OpenJev-Flash-9B",
+      "mirror_used": null,
+      "params_b": 9.41,
+      "active_params_b": 9.41,
+      "moe": false,
+      "layers": 32,
+      "hidden": 4096,
+      "heads": 16,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 8,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 24,
+      "fixed_state_elements": 13172736,
+      "max_context": 16384,
+      "max_context_extended": null,
+      "native_bits": 16,
+      "license": "CC-BY-NC-4.0",
+      "released": "2026-10-07",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 16384,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: architecture fields equal qwen35-9b (diffs only partial_rotary_factor/tie_word_embeddings made explicit, dtype, vision rope).",
+      "sources": [
+        "https://huggingface.co/openjev/OpenJev-Flash-9B/resolve/main/config.json",
+        "https://huggingface.co/api/models/openjev/OpenJev-Flash-9B",
+        "https://huggingface.co/openjev/OpenJev-Flash-9B",
+        "https://huggingface.co/api/models/openjev/OpenJev-Flash-9B-GGUF/tree/main"
+      ],
+      "notes": "Plain causal LM, letter-logit readout like OpenJev 27B. HF total 9,409,813,744 (no MTP weights). Built on Qwen/Qwen3.5-9B revision c2022362.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.5-9B",
+        "output": "Same as OpenJev: letter logits at the first output position, one pass per question (<=52 options), fixed calibration (READOUT_T 1.07).",
+        "typical_prompt_tokens": null,
+        "typical_prompt_tokens_reason": "Not published for the 9B.",
+        "max_options": {
+          "value": 52,
+          "source": "card"
+        },
+        "official_formats": [
+          {
+            "format": "BF16",
+            "repo": "openjev/OpenJev-Flash-9B",
+            "size_gb": 18.84
+          },
+          {
+            "format": "FP8",
+            "repo": "openjev/OpenJev-Flash-9B-FP8",
+            "size_gb": 11.91
+          },
+          {
+            "format": "MLX 8-bit",
+            "repo": "openjev/OpenJev-Flash-9B-MLX",
+            "size_gb": 9.51
+          },
+          {
+            "format": "MLX 4-bit",
+            "repo": "openjev/OpenJev-Flash-9B-MLX-4bit",
+            "size_gb": 5.04
+          },
+          {
+            "format": "GGUF",
+            "repo": "openjev/OpenJev-Flash-9B-GGUF",
+            "sizes_gb": {
+              "Q4_K_M": 5.63,
+              "Q5_K_M": 6.47,
+              "Q6_K": 7.36,
+              "Q8_0": 9.53
+            }
+          }
+        ],
+        "runtimes": {
+          "vllm": "Yes, stock vLLM 0.29.0 + helper shim (card).",
+          "mlx": "Yes, helper shim_mlx.py (card: \"Apple silicon path\").",
+          "llama_cpp": "GGUF for llama.cpp (card); native systemone covers the openjev readout (PR #29818) – that PR tested the 27B only.",
+          "ollama": "No library entry found."
+        },
+        "benchmarks_claimed": "OpenJev Flash card: JevBench public 188/231 (81.4%) vs Clef-Flash 190, Kev-9B 183, Nimble 9B 183; 79.4% on the 10,000 text questions (OpenJev 27B 84.1%, Jev 85.4%).",
+        "throughput_published": [
+          {
+            "figure": "40.4 ms per decision one at a time; ~4.6 US cents per 1,000 decisions at $4.09/GPU-h; 1.6x faster than OpenJev 27B",
+            "hardware": "1x H100, FP8",
+            "source": "card"
+          },
+          {
+            "figure": "about a quarter of a second per decision",
+            "hardware": "Mac, MLX build (chip not stated)",
+            "source": "card"
+          }
+        ],
+        "license_commercial": false
+      }
+    },
+    {
+      "id": "d3",
+      "name": "d3 (Decision 3.0, 27B)",
+      "family": "Decision 3.0",
+      "vendor": "vLLM Semantic Router (vllm-project)",
+      "repo": "vllm-sr/d3",
+      "mirror_used": null,
+      "params_b": 26.09,
+      "active_params_b": 26.09,
+      "moe": false,
+      "layers": 64,
+      "hidden": 5120,
+      "heads": 24,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 16,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 48,
+      "fixed_state_elements": 39223296,
+      "max_context": 32768,
+      "max_context_extended": 262144,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-10",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 32768,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: text architecture equals qwen38-27b (architectures Qwen3_5Model instead of ...ForConditionalGeneration, auto_map to modeling_d3.D3Model).",
+      "sources": [
+        "https://huggingface.co/vllm-sr/d3/resolve/main/config.json",
+        "https://huggingface.co/api/models/vllm-sr/d3",
+        "https://huggingface.co/vllm-sr/d3",
+        "https://docs.vllm.ai/en/latest/models/structured_decisions_models/",
+        "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)"
+      ],
+      "notes": "Decision 3.0 (vLLM Semantic Router). Base model = Qwen3.5/3.8 weights loaded as Qwen3_5Model (no LM head: HF total excludes lm_head). Reads the prompt with BIDIRECTIONAL attention, so vLLM serves it without chunked prefill and without prefix caching; the whole prompt must fit one --ubatch in llama.cpp. Each question gets its own forward pass over the input (card), batched together. vLLM natively since PR #61565 (main, 2026-10-14; nightly, no release yet at card time); vLLM Semantic Router Engine mode; llama.cpp arch vllm-d3 (ggml-org GGUFs); Ollama library \"d3\" (27b/9b/4b/2b tags). KV note: with bidirectional attention and no prefix cache, KV for the prompt is only needed during the one prefill; the calculator should not assume cached-state reuse. max_context = card's recommended --max-model-len 32,768 (\"plenty\"; 32k-token text benchmarked); config allows 262,144.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.8-27B",
+        "output": "Answer-code readout: options get codes, probabilities = softmax of the options' code logits at the checkpoint temperature (vLLM docs). Multiple questions per call, \"each from its own forward pass over the input\" (card), batched.",
+        "typical_prompt_tokens": "~330-token support ticket used for the speed table (card).",
+        "max_options": {
+          "value": 255,
+          "source": "vLLM docs and llama.cpp README"
+        },
+        "official_formats": [
+          {
+            "format": "BF16",
+            "repo": "vllm-sr/d3",
+            "size_gb": null
+          },
+          {
+            "format": "FP8",
+            "repo": "vllm-sr/d3-FP8",
+            "size_gb": 31.88
+          },
+          {
+            "format": "GGUF + mmproj (ggml-org)",
+            "repo": "ggml-org/vllm-d3-GGUF",
+            "sizes_gb": {
+              "BF16": 53.81,
+              "Q8_0": 28.6,
+              "Q4_K_M": 19.4,
+              "mmproj-BF16": 0.93
+            }
+          }
+        ],
+        "runtimes": {
+          "transformers": "Yes, AutoModel trust_remote_code (d3_engine/d3_runtime).",
+          "vllm": "Yes, native D3ForSequenceClassification (nightly; PR #61565), chunked prefill and prefix caching off.",
+          "vllm_semantic_router": "Yes, Engine mode (dev channel).",
+          "llama_cpp": "Yes, arch vllm-d3 (whole prompt in one ubatch).",
+          "ollama": "Yes, library \"d3\".",
+          "mlx": "None found."
+        },
+        "benchmarks_claimed": "d3: Jev Decision Index 0.3.2 = 66.3, first on the official text board (card).",
+        "throughput_published": [
+          {
+            "figure": "Text 1 question median 54.4 ms; 32k-token text 1 question 4.23 s; 27 req/s (p99<1 s, batching); 572 ms (16 questions)",
+            "hardware": "1x AMD Instinct MI325X, ROCm 7.2, one request at a time unless stated",
+            "source": "https://huggingface.co/vllm-sr/d3 (Serving performance)",
+            "derived_prefill_tok_s": "~7700 tok/s (32,768 tokens / 4.23 s)"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "d3-flash",
+      "name": "d3-flash (Decision 3.0, 9B)",
+      "family": "Decision 3.0",
+      "vendor": "vLLM Semantic Router (vllm-project)",
+      "repo": "vllm-sr/d3-flash",
+      "mirror_used": null,
+      "params_b": 8.39,
+      "active_params_b": 8.39,
+      "moe": false,
+      "layers": 32,
+      "hidden": 4096,
+      "heads": 16,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 8,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 24,
+      "fixed_state_elements": 13172736,
+      "max_context": 32768,
+      "max_context_extended": 262144,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-10",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 16384,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: text architecture equals qwen35-9b (architectures Qwen3_5Model instead of ...ForConditionalGeneration, auto_map to modeling_d3.D3Model).",
+      "sources": [
+        "https://huggingface.co/vllm-sr/d3-flash/resolve/main/config.json",
+        "https://huggingface.co/api/models/vllm-sr/d3-flash",
+        "https://huggingface.co/vllm-sr/d3-flash",
+        "https://docs.vllm.ai/en/latest/models/structured_decisions_models/",
+        "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)"
+      ],
+      "notes": "Decision 3.0 (vLLM Semantic Router). Base model = Qwen3.5/3.8 weights loaded as Qwen3_5Model (no LM head: HF total excludes lm_head). Reads the prompt with BIDIRECTIONAL attention, so vLLM serves it without chunked prefill and without prefix caching; the whole prompt must fit one --ubatch in llama.cpp. Each question gets its own forward pass over the input (card), batched together. vLLM natively since PR #61565 (main, 2026-10-14; nightly, no release yet at card time); vLLM Semantic Router Engine mode; llama.cpp arch vllm-d3 (ggml-org GGUFs); Ollama library \"d3\" (27b/9b/4b/2b tags). KV note: with bidirectional attention and no prefix cache, KV for the prompt is only needed during the one prefill; the calculator should not assume cached-state reuse. max_context = card's recommended --max-model-len 32,768 (\"plenty\"; 32k-token text benchmarked); config allows 262,144.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.5-9B",
+        "output": "Answer-code readout: options get codes, probabilities = softmax of the options' code logits at the checkpoint temperature (vLLM docs). Multiple questions per call, \"each from its own forward pass over the input\" (card), batched.",
+        "typical_prompt_tokens": "~330-token support ticket used for the speed table (card).",
+        "max_options": {
+          "value": 255,
+          "source": "vLLM docs and llama.cpp README"
+        },
+        "official_formats": [
+          {
+            "format": "BF16",
+            "repo": "vllm-sr/d3-flash",
+            "size_gb": null
+          },
+          {
+            "format": "GGUF + mmproj (ggml-org)",
+            "repo": "ggml-org/vllm-d3-flash-GGUF",
+            "sizes_gb": {
+              "BF16": 17.92,
+              "Q8_0": 9.53,
+              "Q4_K_M": 6.6,
+              "mmproj-BF16": 0.92
+            }
+          }
+        ],
+        "runtimes": {
+          "transformers": "Yes, AutoModel trust_remote_code (d3_engine/d3_runtime).",
+          "vllm": "Yes, native D3ForSequenceClassification (nightly; PR #61565), chunked prefill and prefix caching off.",
+          "vllm_semantic_router": "Yes, Engine mode (dev channel).",
+          "llama_cpp": "Yes, arch vllm-d3 (whole prompt in one ubatch).",
+          "ollama": "Yes, library \"d3\".",
+          "mlx": "None found."
+        },
+        "benchmarks_claimed": "See card (Decision Index 0.3 board; not extracted).",
+        "throughput_published": [
+          {
+            "figure": "Text 1 question median 19.2 ms; 32k-token text 1 question 1.39 s; 95 req/s (p99<1 s, batching); 176 ms (16 questions, AutoModel)",
+            "hardware": "1x AMD Instinct MI325X, ROCm 7.2, one request at a time unless stated",
+            "source": "https://huggingface.co/vllm-sr/d3-flash (Serving performance)",
+            "derived_prefill_tok_s": "~23600 tok/s (32,768 tokens / 1.39 s)"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "d3-mini",
+      "name": "d3-mini (Decision 3.0, 4B)",
+      "family": "Decision 3.0",
+      "vendor": "vLLM Semantic Router (vllm-project)",
+      "repo": "vllm-sr/d3-mini",
+      "mirror_used": null,
+      "params_b": 4.54,
+      "active_params_b": 4.54,
+      "moe": false,
+      "layers": 32,
+      "hidden": 2560,
+      "heads": 16,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 8,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 24,
+      "fixed_state_elements": 13172736,
+      "max_context": 32768,
+      "max_context_extended": 262144,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-10",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 16384,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: text architecture equals qwen35-4b (architectures Qwen3_5Model instead of ...ForConditionalGeneration, auto_map to modeling_d3.D3Model).",
+      "sources": [
+        "https://huggingface.co/vllm-sr/d3-mini/resolve/main/config.json",
+        "https://huggingface.co/api/models/vllm-sr/d3-mini",
+        "https://huggingface.co/vllm-sr/d3-mini",
+        "https://docs.vllm.ai/en/latest/models/structured_decisions_models/",
+        "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)"
+      ],
+      "notes": "Decision 3.0 (vLLM Semantic Router). Base model = Qwen3.5/3.8 weights loaded as Qwen3_5Model (no LM head: HF total excludes lm_head). Reads the prompt with BIDIRECTIONAL attention, so vLLM serves it without chunked prefill and without prefix caching; the whole prompt must fit one --ubatch in llama.cpp. Each question gets its own forward pass over the input (card), batched together. vLLM natively since PR #61565 (main, 2026-10-14; nightly, no release yet at card time); vLLM Semantic Router Engine mode; llama.cpp arch vllm-d3 (ggml-org GGUFs); Ollama library \"d3\" (27b/9b/4b/2b tags). KV note: with bidirectional attention and no prefix cache, KV for the prompt is only needed during the one prefill; the calculator should not assume cached-state reuse. max_context = card's recommended --max-model-len 32,768 (\"plenty\"; 32k-token text benchmarked); config allows 262,144.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.5-4B",
+        "output": "Answer-code readout: options get codes, probabilities = softmax of the options' code logits at the checkpoint temperature (vLLM docs). Multiple questions per call, \"each from its own forward pass over the input\" (card), batched.",
+        "typical_prompt_tokens": "~330-token support ticket used for the speed table (card).",
+        "max_options": {
+          "value": 255,
+          "source": "vLLM docs and llama.cpp README"
+        },
+        "official_formats": [
+          {
+            "format": "BF16",
+            "repo": "vllm-sr/d3-mini",
+            "size_gb": null
+          },
+          {
+            "format": "GGUF + mmproj (ggml-org)",
+            "repo": "ggml-org/vllm-d3-mini-GGUF",
+            "sizes_gb": {
+              "BF16": 9.7,
+              "Q8_0": 5.16,
+              "Q4_K_M": 3.71,
+              "mmproj-BF16": 0.68
+            }
+          }
+        ],
+        "runtimes": {
+          "transformers": "Yes, AutoModel trust_remote_code (d3_engine/d3_runtime).",
+          "vllm": "Yes, native D3ForSequenceClassification (nightly; PR #61565), chunked prefill and prefix caching off.",
+          "vllm_semantic_router": "Yes, Engine mode (dev channel).",
+          "llama_cpp": "Yes, arch vllm-d3 (whole prompt in one ubatch).",
+          "ollama": "Yes, library \"d3\".",
+          "mlx": "None found."
+        },
+        "benchmarks_claimed": "See card (Decision Index 0.3 board; not extracted).",
+        "throughput_published": [
+          {
+            "figure": "Text 1 question median 18.1 ms; 32k-token text 1 question 1.06 s; 151 req/s (p99<1 s, batching); 115 ms (16 questions, AutoModel)",
+            "hardware": "1x AMD Instinct MI325X, ROCm 7.2, one request at a time unless stated",
+            "source": "https://huggingface.co/vllm-sr/d3-mini (Serving performance)",
+            "derived_prefill_tok_s": "~30900 tok/s (32,768 tokens / 1.06 s)"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "pplx-decider-v1.2",
+      "name": "Perplexity pplx-decider v1.2 (27B)",
+      "family": "pplx-decider",
+      "vendor": "Perplexity",
+      "repo": "perplexity-ai/pplx-decider-v1.2",
+      "mirror_used": null,
+      "params_b": 26.09,
+      "active_params_b": 26.09,
+      "moe": false,
+      "layers": 64,
+      "hidden": 5120,
+      "heads": 24,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 16,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 48,
+      "fixed_state_elements": 39223296,
+      "max_context": 32768,
+      "max_context_extended": 262144,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-15",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 32768,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: equals qwen38-27b except architectures Qwen3_5Model (no LM head).",
+      "sources": [
+        "https://huggingface.co/perplexity-ai/pplx-decider-v1.2/resolve/main/config.json",
+        "https://huggingface.co/api/models/perplexity-ai/pplx-decider-v1.2",
+        "https://huggingface.co/perplexity-ai/pplx-decider-v1.2",
+        "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)"
+      ],
+      "notes": "Training used sequences up to ~32k tokens; max_length defaults to 262,144 (backbone limit), spot-checked to ~243k. v1.2 reads a token placed right after each question's options, so several questions about one state share one pass (v1.1 was one question per pass). Custom Python package (pplx_decider.Decider) with packing, torch.compile and CUDA graphs; needs flash-linear-attention.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.8-27B",
+        "output": "Joint request format: per-question readout token after its options, answer codes A,B,... ; softmax over valid options only with stored temperature. Multiple questions share one sequence/forward pass.",
+        "typical_prompt_tokens": "Decision Index requests average 1,050 tokens (card).",
+        "max_options": {
+          "value": 255,
+          "source": "card (1-255 per question)"
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors",
+            "repo": "perplexity-ai/pplx-decider-v1.2",
+            "size_gb": null
+          },
+          {
+            "format": "GGUF of v1.1 (community)",
+            "repo": "Livesport/pplx-decider-v1.1-27b-GGUF",
+            "sizes_gb": {
+              "Q5_K_M-dyn": 19.58,
+              "Q8_0": 27.25
+            }
+          }
+        ],
+        "runtimes": {
+          "custom": "Yes, pplx_decider package (CUDA).",
+          "llama_cpp": "Yes, arch pplx-decider in llama.cpp server README (255 options, image input).",
+          "vllm": "Not listed in vLLM decision docs.",
+          "ollama": "None found.",
+          "mlx": "None found."
+        },
+        "benchmarks_claimed": null,
+        "benchmarks_claimed_reason": "Not extracted in this pass.",
+        "throughput_published": [
+          {
+            "figure": "Default fast path 19.8 req/s on Decision Index requests (avg 1,050 tokens, 1-64 questions), 56.2 req/s on 437-token rerank pairs; FP8 matmuls 24.9 / 67.3 req/s; reference path 9.1 / 27.1",
+            "hardware": "1x NVIDIA GB200, bf16",
+            "source": "https://huggingface.co/perplexity-ai/pplx-decider-v1.2",
+            "derived_prefill_tok_s": "~20,800 tok/s batched (19.8 x 1,050)"
+          },
+          {
+            "figure": "Single small request 96 ms median (fast path with buckets) vs 131 ms reference",
+            "hardware": "1x GB200",
+            "source": "same card"
+          }
+        ],
+        "throughput_reason": null,
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "pplx-decider-flash-v1.2",
+      "name": "Perplexity pplx-decider-flash v1.2 (4B)",
+      "family": "pplx-decider",
+      "vendor": "Perplexity",
+      "repo": "perplexity-ai/pplx-decider-flash-v1.2",
+      "mirror_used": null,
+      "params_b": 4.54,
+      "active_params_b": 4.54,
+      "moe": false,
+      "layers": 32,
+      "hidden": 2560,
+      "heads": 16,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 8,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 24,
+      "fixed_state_elements": 13172736,
+      "max_context": 32768,
+      "max_context_extended": 262144,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-15",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 16384,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: equals qwen35-4b except architectures Qwen3_5Model (no LM head).",
+      "sources": [
+        "https://huggingface.co/perplexity-ai/pplx-decider-flash-v1.2/resolve/main/config.json",
+        "https://huggingface.co/api/models/perplexity-ai/pplx-decider-flash-v1.2",
+        "https://huggingface.co/perplexity-ai/pplx-decider-flash-v1.2",
+        "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)"
+      ],
+      "notes": "Training used sequences up to ~32k tokens; max_length defaults to 262,144 (backbone limit), spot-checked to ~243k. v1.2 reads a token placed right after each question's options, so several questions about one state share one pass (v1.1 was one question per pass). Custom Python package (pplx_decider.Decider) with packing, torch.compile and CUDA graphs; needs flash-linear-attention.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.5-4B",
+        "output": "Joint request format: per-question readout token after its options, answer codes A,B,... ; softmax over valid options only with stored temperature. Multiple questions share one sequence/forward pass.",
+        "typical_prompt_tokens": "Decision Index requests average 1,050 tokens (card).",
+        "max_options": {
+          "value": 255,
+          "source": "card (1-255 per question)"
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors",
+            "repo": "perplexity-ai/pplx-decider-flash-v1.2",
+            "size_gb": null
+          }
+        ],
+        "runtimes": {
+          "custom": "Yes, pplx_decider package (CUDA).",
+          "llama_cpp": "Yes, arch pplx-decider in llama.cpp server README (255 options, image input).",
+          "vllm": "Not listed in vLLM decision docs.",
+          "ollama": "None found.",
+          "mlx": "None found."
+        },
+        "benchmarks_claimed": null,
+        "benchmarks_claimed_reason": "Not extracted in this pass.",
+        "throughput_published": null,
+        "throughput_reason": "Flash card defers to v1.2 card; no own figures.",
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "kev-27b",
+      "name": "Kev-27B (v2)",
+      "family": "Kev",
+      "vendor": "Jared Palmer (independent)",
+      "repo": "jaredpalmer/kev-27b",
+      "mirror_used": null,
+      "params_b": 25.62,
+      "active_params_b": 25.62,
+      "moe": false,
+      "layers": 64,
+      "hidden": 5120,
+      "heads": 24,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 16,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 48,
+      "fixed_state_elements": 39223296,
+      "max_context": 65536,
+      "max_context_extended": null,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-09-30",
+      "released_source": "card (v2 released 2026-09-30; repo created 2026-09-24)",
+      "kv_elements_per_token_full": 32768,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: text-only config (Qwen3_5TextModel, model_type qwen3_5_text) whose values equal qwen38-27b text_config; no vision tower.",
+      "sources": [
+        "https://huggingface.co/jaredpalmer/kev-27b/resolve/main/config.json",
+        "https://huggingface.co/api/models/jaredpalmer/kev-27b",
+        "https://huggingface.co/jaredpalmer/kev-27b",
+        "https://github.com/jaredpalmer/kev"
+      ],
+      "notes": "Full-weight fine-tune (v2) of Qwen3.8-27B, text only, LM head dropped (HF total 25,624,600,064) plus head.pt pointer head. Card: prefill-only causal backbone with a pointer head over the options; weights 51 GB, server ~65.5 GB resident; 64k state peaks 87.1 GB on H200. Smaller Kev sizes (0.8B/4B/9B) are LoRA adapters (see skipped).",
+      "decision": {
+        "base_model": "Qwen/Qwen3.8-27B",
+        "output": "Pointer head over the option spans, single forward pass, calibrated probability per option; implements TypeSafe System One API. Each state is run once and its questions branch from it.",
+        "typical_prompt_tokens": null,
+        "typical_prompt_tokens_reason": "Not stated.",
+        "max_options": {
+          "value": 255,
+          "source": "card (choice 1-255)"
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors + head.pt",
+            "repo": "jaredpalmer/kev-27b",
+            "size_gb": 51
+          }
+        ],
+        "community_formats": [
+          {
+            "format": "GGUF",
+            "repo": "mradermacher/kev-27b-GGUF",
+            "sizes_gb": {
+              "Q4_K_M": 15.83,
+              "Q8_0": 27.24
+            }
+          },
+          {
+            "format": "GGUF",
+            "repo": "kdercksen/Kev-27B-GGUF",
+            "sizes_gb": {
+              "Q4_K_M": 15.84,
+              "Q6_K": 21.04
+            }
+          }
+        ],
+        "runtimes": {
+          "custom": "Yes, Kev repo server (uv sync --extra serve) on B200/H200/H100 80 GB; MLX path auto-selected on Apple Silicon (untested at 27B).",
+          "llama_cpp": "Kev arch supported in PR #29818 (tested on Kev-4B); whether the community 27B GGUFs carry head.pt is UNVERIFIED.",
+          "vllm": "Not listed.",
+          "ollama": "None found."
+        },
+        "benchmarks_claimed": "Card: MMLU-Pro (10 options) 0.675 vs v1 0.665; JevBench via OpenJev Flash card: Kev-9B 183/231.",
+        "throughput_published": [
+          {
+            "figure": "Model time at a 64k-token state 9.4 s new / 733 ms cached; 21.1 / 36.4 req/s at 1 / 64 clients",
+            "hardware": "1x H200 bf16, fused kernels + CUDA graphs",
+            "source": "https://huggingface.co/jaredpalmer/kev-27b",
+            "derived_prefill_tok_s": "~7,000 tok/s at 64k"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "nimble-v4-max-27b",
+      "name": "Bespoke Nimble-v4-max",
+      "family": "Nimble",
+      "vendor": "Bespoke Labs",
+      "repo": "bespokelabs/Nimble-v4-max",
+      "mirror_used": null,
+      "params_b": 27.36,
+      "active_params_b": 27.36,
+      "moe": false,
+      "layers": 64,
+      "hidden": 5120,
+      "heads": 24,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 16,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 48,
+      "fixed_state_elements": 39223296,
+      "max_context": 262144,
+      "max_context_extended": null,
+      "native_bits": 16,
+      "license": "CC-BY-NC-4.0",
+      "released": "2026-10-18",
+      "released_source": "hf_createdAt (v4.1 tag 2026-11)",
+      "kv_elements_per_token_full": 32768,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: identical to qwen38-27b (no differing keys at all).",
+      "sources": [
+        "https://huggingface.co/bespokelabs/Nimble-v4-max/resolve/main/config.json",
+        "https://huggingface.co/api/models/bespokelabs/Nimble-v4-max",
+        "https://huggingface.co/bespokelabs/Nimble-v4-max",
+        "https://huggingface.co/datasets/bespokelabs/nimble-v4-max-decision-index"
+      ],
+      "notes": "max_context: card states none, so config max_position_embeddings. Card: ~55 GB BF16, one 80 GB GPU. Needs Bespoke inference code (special attention pattern, one token scored per option); loading it as a chat model does not reproduce answers. Earlier Nimble 9B versions are LoRA adapters (see skipped); Ollama \"nimble\" 9B exists.",
+      "decision": {
+        "base_model": "Qwen/Qwen3.8-27B",
+        "output": "Scores one token per option with the trained attention pattern; softmax over option logits, calibrated by dividing by default temperature (2.25 for v4.1).",
+        "typical_prompt_tokens": null,
+        "typical_prompt_tokens_reason": "Not published.",
+        "max_options": {
+          "value": null,
+          "reason": "Not stated."
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors",
+            "repo": "bespokelabs/Nimble-v4-max",
+            "size_gb": 55
+          }
+        ],
+        "runtimes": {
+          "custom": "Yes, code/nimble in the decision-index dataset repo.",
+          "llama_cpp": "Not listed.",
+          "vllm": "Not listed.",
+          "ollama": "Only the older 9B \"nimble\" tag (Ollama >= 0.35.0, third-party guide).",
+          "mlx": "None."
+        },
+        "benchmarks_claimed": "Card: Decision Index 0.3 public 72.74 (v4.1), 68.46 (v4.0); MMLU-Pro 74.1, RAGTruth F1 86.1.",
+        "throughput_published": null,
+        "throughput_reason": "Not published.",
+        "license_commercial": false
+      }
+    },
+    {
+      "id": "h2o-lightning-4b",
+      "name": "H2O Lightning 4B",
+      "family": "h2o-lightning",
+      "vendor": "H2O.ai",
+      "repo": "h2oai/h2o-lightning-4b",
+      "mirror_used": null,
+      "params_b": 4.66,
+      "active_params_b": 4.66,
+      "moe": false,
+      "layers": 32,
+      "hidden": 2560,
+      "heads": 16,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "kv_heads_full": 4,
+      "head_dim_full": 256,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 8,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 24,
+      "fixed_state_elements": 13172736,
+      "max_context": 40960,
+      "max_context_extended": 131072,
+      "native_bits": 16,
+      "license": "Apache-2.0",
+      "released": "2026-10-02",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 16384,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Yes: equals qwen35-4b (only partial_rotary_factor made explicit); config adds head_dtype float32.",
+      "sources": [
+        "https://huggingface.co/h2oai/h2o-lightning-4b/resolve/main/config.json",
+        "https://huggingface.co/api/models/h2oai/h2o-lightning-4b",
+        "https://huggingface.co/h2oai/h2o-lightning-4b",
+        "https://huggingface.co/api/models/h2oai/h2o-lightning-4b-gguf/tree/main",
+        "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)"
+      ],
+      "notes": "Server MAX_LEN 40,960 by default; card text settings use 131,072 on L40S. llama.cpp keeps first+last 16,000 tokens of states over 32,000. Two reading modes: one-way (stock vLLM 0.30.0, prefix cache) and two-way (h2oai vLLM fork with per-request attention, recommended).",
+      "decision": {
+        "base_model": "Qwen/Qwen3.5-4B",
+        "output": "One forward pass and one output token per decision; options read at first output position; choice/noul/score (score 1-255 levels in llama.cpp).",
+        "typical_prompt_tokens": "Speed table buckets 100-300 and 800-1,200 tokens (card).",
+        "max_options": {
+          "value": 255,
+          "source": "card + llama.cpp README"
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors",
+            "repo": "h2oai/h2o-lightning-4b",
+            "size_gb": 9.3
+          },
+          {
+            "format": "GGUF (official)",
+            "repo": "h2oai/h2o-lightning-4b-gguf",
+            "sizes_gb": {
+              "IQ3_XXS": 1.9,
+              "Q4_K_M": 2.71,
+              "Q5_K_M": 3.07,
+              "Q8_0": 4.48,
+              "BF16": 8.42,
+              "mmproj-f16": 0.67
+            }
+          },
+          {
+            "format": "MLX q8/q4 (NetProjects, community)",
+            "repo": "netprojects/h2o-lightning-4b-mlx-q8, -q4",
+            "sizes_gb": null
+          }
+        ],
+        "runtimes": {
+          "vllm": "Yes: stock vLLM 0.30.0 (one-way) or h2oai/vllm fork b05cc29 (two-way) + shim.",
+          "llama_cpp": "Yes, arch h2o-lightning.",
+          "mlx": "Community builds.",
+          "ollama": "None found."
+        },
+        "benchmarks_claimed": "Card: 206/231 JevBench public items (two-way, L40S).",
+        "throughput_published": [
+          {
+            "figure": "One-way, 1 question: p50 20.9 ms / 42.7 req/s; 3 questions: 30.1 ms / 84 decisions/s; FP8 99.2 decisions/s at 64 in flight",
+            "hardware": "1x H100 80 GB",
+            "source": "https://huggingface.co/h2oai/h2o-lightning-4b (Serving at scale)"
+          },
+          {
+            "figure": "p50 28.0 ms at 100-300 tokens (32.9 req/s), 69.3 ms at 800-1,200 tokens (15.1 req/s)",
+            "hardware": "1x L40S 48 GB",
+            "source": "same"
+          }
+        ],
+        "license_commercial": true
+      }
+    },
+    {
+      "id": "liquid-d1-3b",
+      "name": "Liquid d1-3B",
+      "family": "d1",
+      "vendor": "Liquid AI",
+      "repo": "LiquidAI/d1-3B",
+      "mirror_used": null,
+      "params_b": 3.12,
+      "active_params_b": 3.12,
+      "moe": false,
+      "layers": 30,
+      "hidden": 2048,
+      "heads": 32,
+      "kv_heads": 8,
+      "head_dim": 64,
+      "kv_heads_full": 8,
+      "head_dim_full": 64,
+      "attention": "linear-hybrid",
+      "kv_layers_full": 8,
+      "kv_layers_swa": 0,
+      "swa_window": null,
+      "mla": null,
+      "state_layers": 22,
+      "fixed_state_elements": 135168,
+      "max_context": 32768,
+      "max_context_extended": null,
+      "native_bits": 16,
+      "license": "LFM Open License v1.0",
+      "released": "2026-10-05",
+      "released_source": "hf_createdAt",
+      "kv_elements_per_token_full": 8192,
+      "kv_elements_per_token_swa": 0,
+      "config_equals_base": "Not compared: base LiquidAI/LFM2.5-VL-3B has no entry in models.json. Computed from d1-3B config.",
+      "sources": [
+        "https://huggingface.co/LiquidAI/d1-3B/resolve/main/config.json",
+        "https://huggingface.co/api/models/LiquidAI/d1-3B",
+        "https://huggingface.co/LiquidAI/d1-3B",
+        "https://huggingface.co/LiquidAI/d1-3B/resolve/main/LICENSE",
+        "https://huggingface.co/api/models/LiquidAI/d1-3B-GGUF/tree/main",
+        "https://docs.vllm.ai/en/latest/models/structured_decisions_models/"
+      ],
+      "notes": "LFM2 hybrid: 30 layers = 22 short-conv + 8 full GQA attention (8 KV heads, head_dim 2048/32 = 64). Attention type recorded as linear-hybrid; the \"state\" is the short-conv cache: 22 layers x conv_dim 2048 x L_cache 3 = 135,168 elements (LFM2 keeps (hidden, L_cache) per conv layer). Vision tower SigLIP2 included in total. License: commercial use allowed only for entities under USD 10M annual revenue (LICENSE section 5).",
+      "decision": {
+        "base_model": "LiquidAI/LFM2.5-VL-3B",
+        "output": "One forward pass, zero output tokens; several named questions answered in one pass (card example \"3 questions, one pass\").",
+        "typical_prompt_tokens": "Speed table uses a 3.4k-token state and a 384 px image.",
+        "max_options": {
+          "value": 255,
+          "source": "llama.cpp README (lfm2-d1)"
+        },
+        "official_formats": [
+          {
+            "format": "BF16 safetensors",
+            "repo": "LiquidAI/d1-3B",
+            "size_gb": null
+          },
+          {
+            "format": "GGUF (official)",
+            "repo": "LiquidAI/d1-3B-GGUF",
+            "sizes_gb": {
+              "Q4_K_M": 1.67,
+              "Q8_0": 2.87,
+              "BF16": 5.4,
+              "mmproj-Q8_0": 0.58
+            }
+          }
+        ],
+        "runtimes": {
+          "transformers": "Yes, custom modeling_d1.py.",
+          "vllm": "Yes, LiquidStrategy on Lfm2VlForConditionalGeneration (images only); --disable-prefix-caching lowers latency for changing states.",
+          "llama_cpp": "Yes, arch lfm2-d1.",
+          "ollama": "None found.",
+          "mlx": "mps (PyTorch) figures published; no MLX build found."
+        },
+        "benchmarks_claimed": "Card: Decision Index 0.2.1 = 48.57, best under 10B per Liquid.",
+        "throughput_published": [
+          {
+            "figure": "1 question 8 ms; 3 questions one pass 21 ms; 3.4k-token state 102 ms; 384 px image 17 ms; 64 states packed 475/s",
+            "hardware": "NVIDIA RTX 4090, bf16, compiled",
+            "source": "https://huggingface.co/LiquidAI/d1-3B",
+            "derived_prefill_tok_s": "~33,000 tok/s (3.4k / 102 ms)"
+          },
+          {
+            "figure": "9 / 14 / 44 ms / 18 ms; 1,106/s packed",
+            "hardware": "AMD MI325X",
+            "source": "same",
+            "derived_prefill_tok_s": "~77,000 tok/s"
+          },
+          {
+            "figure": "30 / 41 / 640 ms / 62 ms; 78/s packed",
+            "hardware": "Apple M5 Pro (PyTorch mps)",
+            "source": "same",
+            "derived_prefill_tok_s": "~5,300 tok/s"
+          },
+          {
+            "figure": "Jetson AGX Thor 16 ms/220 ms (3.4k), Orin 64 GB 26/560 ms, Orin Nano 50/1,640 ms",
+            "hardware": "NVIDIA Jetson",
+            "source": "same"
+          }
+        ],
+        "license_commercial": false,
+        "license_commercial_note": "Conditional: allowed for entities with < USD 10M annual revenue; false for larger companies."
+      }
+    }
+  ],
+  "skipped": [
+    {
+      "repo": "timfromhcs/APUS-OpenJev-v1-9B-GGUF (source apus-ailab/APUS-OpenJev-v1-9B, now 404/renamed; org apus-ailab publishes APUS-Reflex 4B/9B/35B-A3B)",
+      "reason": "Look-alike name. A GGUF re-upload (arch qwen35) of APUS AI-LAB's Qwen3.5-9B merged decision model; card says 68/80 on an internal panel and that probabilities \"express relative preference rather than calibrated correctness\". Genuine decision-style model with full weights, but the source repo is gone and not related to openjev/openjev. Not given a full entry; the APUS-Reflex family is a candidate for a later pass."
+    },
+    {
+      "repo": "ZefanCai/Open-Jev-9B (and -2B, -27B-v1.1)",
+      "reason": "Look-alike, not full weights: LoRA adapter + scalar head.pt for Qwen/Qwen3.5-9B; needs pinned upstream base and the Open-Jev GitHub loader. Apache-2.0. Unrelated to openjev/openjev."
+    },
+    {
+      "repo": "v6543210/openJev-1.5B",
+      "reason": "Look-alike, not full weights: 17 MB LoRA (4.35M params) on Qwen2.5-Coder-1.5B-Instruct with custom inference.py; letter-logit readout, 2-26 options."
+    },
+    {
+      "repo": "jaredpalmer/kev-0.8b, kev-4b, kev-9b",
+      "reason": "LoRA adapters + head.pt (no merged weights in the official repos). ggml-org/Kev-4B-GGUF, Kev-0.8B-GGUF, Kev-9B-GGUF are merged GGUFs supported by llama.cpp (PR #29818). Kev-27B v2 is full weights and is included."
+    },
+    {
+      "repo": "bespokelabs/Bespoke-Nimble-9B (v1-v3)",
+      "reason": "LoRA adapter + schema_config.json, CC BY-NC 4.0. ggml-org/Bespoke-Nimble-9B-v3-GGUF and Ollama \"nimble\" (9b bf16/q8_0/q4_K_M) exist. Nimble-v4-max 27B (full weights) is included."
+    },
+    {
+      "repo": "interfaze-ai/lev",
+      "reason": "LoRA adapter on Qwen3.5-4B + mode_b_head.pt; ggml-org/lev-GGUF (merged, 4.2B) runs on llama.cpp systemone."
+    },
+    {
+      "repo": "convaiinnovations/laya (+ laya-multilingual)",
+      "reason": "Not LLM-shaped: ModernBERT encoder decision model, 0.42B params, Apache-2.0; llama.cpp supports it (ggml-org/Laya-GGUF). Cloudflare table: 5.8 ms median latency. Too small for the calculator's KV model; whole prompt must fit one ubatch."
+    },
+    {
+      "repo": "SupersonicLabs/Julia-1",
+      "reason": "Not LLM-shaped: ModernBERT encoder, 0.14B, Apache-2.0; ggml-org/Julia-1-GGUF."
+    },
+    {
+      "repo": "vllm-sr/d3-nano (2B), d3-lite (0.8B), d3-edge (0.6B), d3-turbo, d3-ultra (+FP8), vela3-*",
+      "reason": "Same Decision 3.0 family/API; only d3, d3-flash and d3-mini detailed in this pass."
+    },
+    {
+      "repo": "LiquidAI/d1-2B, d1-omni-600M, d1-Omni-2B",
+      "reason": "Same d1 family; not detailed. llama.cpp supports lfm2-d1-omni (prompt cut to 16,384)."
+    },
+    {
+      "repo": "autotrust/AutoTrust-Decider-* , startlux-models/StartLux-Decision-*, org2ai/Wald-*, Mapika/decider-*, chaoliangUNSW/Jev-Style-*, alibiserikbay/JevK5, baselabs/elephant-1, fastino/GLiNER2.5-Decide, openbmb/MiniCPM-OCR-Jev, TypeScript/FastBrain-9B and dozens more tagged decision-model",
+      "reason": "Unvetted long tail (many Jev-style reproductions, often LoRA or text-generation fine-tunes). Not verified in this pass; openbmb-minicpm-ocr-jev is supported by llama.cpp for one fixed OCR-consistency question."
+    },
+    {
+      "repo": "Jev (TypeSafe) and DiffusionGemma Jev",
+      "reason": "Jev is a hosted API, no weights. \"DiffusionGemma Jev\" appears only as a comparison column; vLLM serves google/diffusiongemma-26B-A4B-it as a decision model through a canvas strategy (generic, not a dedicated checkpoint)."
+    }
+  ],
+  "explainer": {
+    "what_is_a_decision_model": "A decision model is a language model used as a classifier: you send a situation (the \"state\": text, JSON, a web page or an image) plus typed questions with their allowed answers, and it returns a probability for every allowed option instead of writing text. The labels live in the request, so the same model routes a ticket, flags a policy breach or picks an agent's next click without retraining. The answer comes from a single prefill pass over the prompt (either the next-token scores of option letters, as in OpenJev, or a small head on the final hidden states, as in Clef), so there is no token-by-token generation and cost is input tokens only. Speed therefore depends on prefill throughput and prompt length, not on decode tokens per second.",
+    "calculator_implications": [
+      "Work = one prefill of the whole prompt per request (Clef, pplx v1.2, d1: all questions in one pass) or per question (OpenJev, d3: one pass per question, state prefix-cached where the runtime allows; d3 is bidirectional so no prefix cache).",
+      "Decisions/s ~= prefill_tokens_per_s / prompt_tokens (x questions answered per pass). Published single-request points: Clef 27B ~9.8k tok/s at 16k (Workers AI/SGLang), OpenJev 27B FP8 ~8.6k tok/s at 15k (H100), d3 27B ~7.7k tok/s at 32k (MI325X), Kev-27B ~7k tok/s at 64k (H200), d3-flash 9B ~23.6k tok/s, d3-mini 4B ~31k tok/s, d1-3B ~33k tok/s on RTX 4090; Apple M5 Max MLX: Clef 27B 4-bit ~630 tok/s, Clef-flash 4-bit ~2.3k tok/s at 16k.",
+      "Memory = weights + KV/state for ONE prompt (no long generation), plus small heads (Clef ~0.12-0.26 GB).",
+      "Short prompts are latency-bound (fixed overhead ~20-80 ms on datacenter GPUs), so tok/s at 16-32k is the right figure for long states and per-request overhead dominates for 300-token tickets."
+    ],
+    "sources": [
+      "https://blog.cloudflare.com/clef-decision-models",
+      "https://huggingface.co/openjev/openjev",
+      "https://huggingface.co/Cloudflare/clef",
+      "https://developers.cloudflare.com/changelog/post/2026-10-01-clef-workers-ai/",
+      "https://docs.vllm.ai/en/latest/models/structured_decisions_models/",
+      "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md (section POST /v1/systemone)",
+      "https://github.com/ggml-org/llama.cpp/pull/29818",
+      "https://github.com/ggml-org/llama.cpp/pull/29831"
+    ]
+  }
+}

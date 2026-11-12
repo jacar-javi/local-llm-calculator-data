@@ -116,3 +116,17 @@ The KV figures below are KV cache at 32k context in fp16, computed with the old 
 | mistral-l2 | params 123 | 122.6 (card still says 123B) | unchanged |
 
 Layers, hidden size, heads, KV heads and head_dim were correct for all 20 old entries. That includes the explicit-head_dim traps (Qwen3, Nemo, Mistral Small, Gemma 3 27B) and the Qwen3.6 KV-layer count of 10. Unchanged entries: qwen3-4b, qwen3-8b, qwen3-14b, qwen3-32b, qwen3-30b, qwen3-235b, llama8b, llama33-70b, ds-r1-8b, ds-r1-32b and mistral-s31.
+
+## 2026-11-12 update: new chat models, decision models, voice models
+
+**Chat models (`models.json`).** 14 entries added and Spark-X2.5 4B replaced by Spark-X2.6 4B (same config, so the same memory). Same method as above: `config.json`, HF API, model card, modeling source. Points to know:
+
+- LFM3 and LFM2.5 keep a short-convolution state on their non-attention layers. It is counted in `fixed_state_elements` like the Mamba/DeltaNet conv state (hidden x (kernel - 1)); the attention label (`swa-hybrid` for LFM3, `linear-hybrid` for LFM2.5) is the closest of the five.
+- MiMo-V2.6-Flash has different K and V head sizes (192 / 128), so its KV elements are layers x kv_heads x 320, not 2 x heads x head_dim. Do not recompute them from `kv_heads`/`head_dim`.
+- Xing4.0 is counted with the MLA latent (40 x 576), as on the other MLA entries; its own `trust_remote_code` modeling caches the decompressed K/V (409,600 per token), so a plain transformers run uses far more.
+- 12 of the 15 release dates are the HF repo creation date (`released_source`).
+- Skipped: DeepSeek-V4.1-Flash (compressed attention), MiniMax-M3.1-Flash and Step-5-Preview (index-cache sparse attention), Ling-3.1-flash and Raon-1 (MLA mixed with linear layers), Nemotron Dory (looped), fine-tunes of architectures already listed, and models above ~800B.
+
+**Decision models (`decision-models.json`).** 14 models that return a probability per allowed option in one forward pass (Clef, Clef-flash, Clef-omni, OpenJev, OpenJev Flash, d3/-flash/-mini, pplx-decider v1.2/-flash, Kev-27B, Nimble-v4-max, H2O Lightning 4B, Liquid d1-3B). Each has a full `models.json`-schema entry plus a `decision` block (base model, output read-out, runtimes, formats, published throughput, licence). Memory uses the same weights + KV formula; the generator adds Clef's separately shipped joint head (0.13B / 0.12B). Per-engine support (`yes`/`helper`/`no`/undocumented) and the translated speed figures are editorial and live in `DECISION_RUNTIMES` / `DECISION_REFS` in `scripts/build-llm-calc-data.py`. No decode or prefill estimate: prefill is compute bound and not calibrated.
+
+**Voice models (`tts-models.json`).** 39 open TTS models with components, languages, cloning, streaming, licence, weights per format, runtimes and backends, published memory and published speed (RTF, x real time, time to first audio), each with its source. The Open TTS Leaderboard tables were read on the same day. Memory in the calculator is the smallest published figure that applies to the platform kind (`TTS_MEM` in the generator); without one, the 16-bit weights stand in and are flagged as a minimum. Spanish support and commercial-use conditions are summarised in `TTS_SPANISH` / `TTS_COMMERCIAL_NOTE`.

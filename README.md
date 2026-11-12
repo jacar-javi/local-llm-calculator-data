@@ -8,6 +8,8 @@ The sourced dataset and the generator behind the **local LLM calculator** on jac
 The calculator answers three questions before you buy hardware or download weights:
 does a model fit in memory with a given engine, context and quantization; roughly
 how fast will it decode; and what does running it yourself cost compared with an API.
+It also covers decision models (classifiers that return a probability per option)
+and open text-to-speech models, each in its own section.
 This repository holds the data and the pure compute functions. The page markup
 is not included.
 
@@ -15,10 +17,12 @@ is not included.
 
 | Path | Contents |
 |---|---|
-| `data/models.json` | 46 open-weight models: parameters (total and active), attention type (full, sliding-window hybrid, MLA, linear/SSM hybrids), KV elements per token split into full and sliding-window layers, window size, fixed state, max context |
+| `data/models.json` | 60 open-weight chat models: parameters (total and active), attention type (full, sliding-window hybrid, MLA, linear/SSM hybrids), KV elements per token split into full and sliding-window layers, window size, fixed state, max context |
 | `data/hardware.json` | 34 platforms (discrete GPUs, Apple Silicon, AMD Strix Halo, NVIDIA DGX Spark, CPU-only servers): memory, bandwidth, power, how much memory the GPU may use, official prices where the vendor publishes one; plus 132 dense-model `llama-bench` points used to calibrate the speed estimate |
 | `data/moe-calibration.json` | Mixture-of-experts speed calibration points and the derived efficiency factors |
 | `data/engines.json` | 8 inference engines, each pinned to a release (llama.cpp, Ollama, LM Studio, vLLM, SGLang, MLX-LM, oMLX, ExLlamaV3): weight formats with bits per weight, KV cache types with bytes per element, memory reservation policy, attention support |
+| `data/decision-models.json` | 14 decision models (Clef, OpenJev, d3, pplx-decider and others): the same architecture fields as `models.json`, plus the base model, how the answer is read out, which engines run it, published throughput and licence |
+| `data/tts-models.json` | 39 open text-to-speech models: components, languages, voice cloning, streaming, licence, weights per format, runtimes and backends, published memory and published speed, each with its source |
 | `data/colibri.json` | Colibri expert-streaming engine: per-model RAM and disk requirements and published speed references |
 | `data/*-notes.md` | Research notes: how each figure was derived, where sources disagree and which one was used |
 | `scripts/build-llm-calc-data.py` | Generator: reads `data/` and writes the data block of `calculator/llm-calculator.js` |
@@ -37,8 +41,9 @@ disagree, the code wins and the notes say so (for example, vLLM's
 `gpu_memory_utilization` default is 0.92 in the v0.29.0 code while the docs say
 0.9). Undocumented behaviour is costed as the expensive case and labelled.
 
-Prices appear only where the vendor publishes them. Data was verified on
-2026-09-15 (`DATA_VERIFIED` in the generated block).
+Prices appear only where the vendor publishes them. Platforms and engines were
+verified on 2026-09-15; chat, decision and voice models on 2026-11-12
+(`DATA_VERIFIED` in the generated block).
 
 On top of the verified facts, the generator adds a few editorial choices, all
 visible in `scripts/build-llm-calc-data.py`: which formats and KV types each engine
@@ -55,6 +60,29 @@ results: by ceiling band for dense models (132 points) and separately for MoE
 models, which reach a lower fraction. The estimate is capped at the highest
 ceiling seen in the calibration set, because there is no evidence that speed keeps
 scaling beyond it.
+
+### Decision models
+
+A decision model is an LLM with a head that scores a fixed set of options in one
+forward pass, so its memory is the same weights + KV formula as a chat model (plus
+the separately shipped head where there is one). Speed is not estimated: one pass
+over the prompt is compute bound, and the calibration above only covers
+bandwidth-bound decode. The calculator quotes the published throughput figures
+instead. Support differs by engine: `yes`, `helper` (needs the model's own helper
+script), `no` (the engine loads the weights but returns a meaningless answer) or
+undocumented.
+
+### Voice models
+
+Text-to-speech models (codec language models, vocoders, flow matching) do not fit
+the weights + KV + decode model, so they have their own section. Memory is the
+smallest figure the authors or the community publish for that kind of platform
+(discrete GPU, Apple Silicon, CPU); when nothing is published, the 16-bit weights
+stand in and the result is labelled as a minimum. Speeds are only the published
+ones (real-time factor, times real time, time to first audio) with the hardware
+they were measured on. Spanish support (official, separate checkpoint only,
+experimental, none) and commercial-use conditions are editorial summaries in the
+generator.
 
 ## Regenerate and test
 
